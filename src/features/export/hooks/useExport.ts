@@ -4,6 +4,7 @@ import type { ExportOptions, CharacterGrid } from '@/shared/types/index.ts';
 import { formatPlaintext } from '../formatters/plaintext.ts';
 import { formatAnsi } from '../formatters/ansi.ts';
 import { formatHtml } from '../formatters/html.ts';
+import { collectVideoFrames } from '../collectFrames.ts';
 
 function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
@@ -31,6 +32,44 @@ function filenameForFormat(
     frames: '.zip',
   };
   return `${stem}${extMap[format]}`;
+}
+
+/**
+ * Returns all frames for video sources (by seeking + rendering each frame),
+ * or wraps the current grid in an array for image sources.
+ */
+async function getFrames(
+  currentGrid: CharacterGrid,
+  state: ReturnType<typeof useAppStore.getState>,
+  onProgress?: (percent: number) => void,
+): Promise<CharacterGrid[]> {
+  const { sourceVideo, sourceInfo, settings, totalFrames } = state;
+
+  if (sourceInfo?.type !== 'video' || !sourceVideo || !sourceInfo.duration) {
+    return [currentGrid];
+  }
+
+  // Pause playback to prevent seeking conflicts
+  const wasPlaying = state.isPlaying;
+  if (wasPlaying) {
+    useAppStore.getState().setIsPlaying(false);
+  }
+
+  try {
+    return await collectVideoFrames(
+      sourceVideo,
+      sourceInfo.width,
+      sourceInfo.height,
+      settings,
+      totalFrames,
+      sourceInfo.duration,
+      onProgress,
+    );
+  } finally {
+    if (wasPlaying) {
+      useAppStore.getState().setIsPlaying(true);
+    }
+  }
 }
 
 export function useExport() {
@@ -105,13 +144,14 @@ export function useExport() {
 
           case 'gif': {
             const { formatGif } = await import('../formatters/gif.ts');
-            // For single image, wrap grid as one-frame animation
-            const frames: CharacterGrid[] = [grid];
-            const blob = await formatGif(frames, {
+            const gifFrames = await getFrames(grid, state, (p) =>
+              setProgress(Math.round(p * 0.8)),
+            );
+            const blob = await formatGif(gifFrames, {
               fps: settings.targetFPS,
               quality: extraOptions?.gifQuality,
               loop: extraOptions?.gifLoop,
-              onProgress: setProgress,
+              onProgress: (p) => setProgress(80 + Math.round(p * 0.2)),
             });
             triggerDownload(blob, filename);
             break;
@@ -119,8 +159,8 @@ export function useExport() {
 
           case 'webm': {
             const { formatWebm } = await import('../formatters/webm.ts');
-            const frames: CharacterGrid[] = [grid];
-            const blob = await formatWebm(frames, {
+            const webmFrames = await getFrames(grid, state, setProgress);
+            const blob = await formatWebm(webmFrames, {
               fps: settings.targetFPS,
               bitrate: extraOptions?.webmBitrate,
             });
@@ -132,8 +172,8 @@ export function useExport() {
             const { formatFrameSequence } = await import(
               '../formatters/frames.ts'
             );
-            const frames: CharacterGrid[] = [grid];
-            const blob = await formatFrameSequence(frames, {
+            const seqFrames = await getFrames(grid, state, setProgress);
+            const blob = await formatFrameSequence(seqFrames, {
               format: extraOptions?.framesFormat ?? 'txt',
               includeMetadata: extraOptions?.includeMetadata,
               fps: settings.targetFPS,
