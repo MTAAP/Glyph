@@ -12,6 +12,9 @@ export interface RenderSettings {
 
   charsetPreset: string;
   customCharset: string;
+  wordSequence: string;
+  wordMode: 'cycle' | 'density';
+  wordThreshold: number;
 
   colorMode: 'mono' | 'foreground' | 'full';
   colorDepth: 8 | 16 | 256 | 'truecolor';

@@ -1,6 +1,6 @@
 import { mapToCharacters } from '../mapper';
 import type { SampleResult } from '../sampler';
-import type { RenderSettings, CharacterGrid } from '@/shared/types';
+import type { RenderSettings } from '@/shared/types';
 
 function createTestImage(
   width: number,
@@ -30,6 +30,9 @@ function makeSettings(overrides: Partial<RenderSettings> = {}): RenderSettings {
     invertRamp: false,
     charsetPreset: 'classic',
     customCharset: '',
+    wordSequence: 'GLYPH',
+    wordMode: 'cycle' as const,
+    wordThreshold: 128,
     colorMode: 'mono',
     colorDepth: 256,
     monoFgColor: '#ffffff',
@@ -338,6 +341,103 @@ describe('mapToCharacters', () => {
           expect(validChars.has(cell.char)).toBe(true);
         }
       }
+    });
+  });
+
+  describe('word cycle mode', () => {
+    it('cycles characters by grid position', () => {
+      const samples = uniformSamples(2, 3, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'ABC',
+        wordThreshold: 0,
+      });
+      const result = mapToCharacters(samples, settings, 'ABC', dummyImageData, 4, 4);
+
+      // Row 0: positions 0,1,2 → A,B,C
+      expect(result[0][0].char).toBe('A');
+      expect(result[0][1].char).toBe('B');
+      expect(result[0][2].char).toBe('C');
+      // Row 1: positions 3,4,5 → A,B,C (wraps)
+      expect(result[1][0].char).toBe('A');
+      expect(result[1][1].char).toBe('B');
+      expect(result[1][2].char).toBe('C');
+    });
+
+    it('shows space for pixels below threshold', () => {
+      // Dark pixels (lum ~0) with threshold 128 → not visible
+      const samples = uniformSamples(1, 2, { r: 0, g: 0, b: 0, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'HI',
+        wordThreshold: 128,
+      });
+      const result = mapToCharacters(samples, settings, 'HI', dummyImageData, 4, 4);
+
+      expect(result[0][0].char).toBe(' ');
+      expect(result[0][1].char).toBe(' ');
+    });
+
+    it('respects invertRamp', () => {
+      // Dark pixels with invert → visible (lum <= threshold)
+      const samples = uniformSamples(1, 2, { r: 0, g: 0, b: 0, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'HI',
+        wordThreshold: 128,
+        invertRamp: true,
+      });
+      const result = mapToCharacters(samples, settings, 'HI', dummyImageData, 4, 4);
+
+      expect(result[0][0].char).toBe('H');
+      expect(result[0][1].char).toBe('I');
+    });
+
+    it('applies color in foreground mode', () => {
+      const samples = uniformSamples(1, 1, { r: 100, g: 200, b: 50, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'X',
+        wordThreshold: 0,
+        colorMode: 'foreground',
+      });
+      const result = mapToCharacters(samples, settings, 'X', dummyImageData, 4, 4);
+
+      expect(result[0][0].fg).toEqual([100, 200, 50]);
+    });
+
+    it('handles empty charset gracefully', () => {
+      const samples = uniformSamples(1, 1, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: '',
+        wordThreshold: 0,
+      });
+      // Empty charset falls back to space
+      const result = mapToCharacters(samples, settings, '', dummyImageData, 4, 4);
+
+      expect(result[0][0].char).toBe(' ');
+    });
+  });
+
+  describe('word density mode', () => {
+    it('uses word characters as standard luminance ramp', () => {
+      // White pixel should map to the last character in the word
+      const samples = uniformSamples(1, 1, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'density',
+        wordSequence: 'ABC',
+      });
+      // Density mode goes through buildCharsetGrid — the word IS the charset
+      const result = mapToCharacters(samples, settings, 'ABC', dummyImageData, 4, 4);
+
+      expect(result[0][0].char).toBe('C');
     });
   });
 });

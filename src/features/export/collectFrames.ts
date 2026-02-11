@@ -26,7 +26,7 @@ function renderFrame(
   sourceWidth: number,
   sourceHeight: number,
 ): CharacterGrid {
-  const charset = getActiveCharset(settings.charsetPreset, settings.customCharset);
+  const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const samples = sampleGrid(
     imageData.data,
     sourceWidth,

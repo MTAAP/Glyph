@@ -1,75 +1,61 @@
-import * as Select from '@radix-ui/react-select';
-import { ChevronDown, Check } from 'lucide-react';
 import { useAppStore } from '@/features/settings/store';
-import { CHARSET_PRESETS, getActiveCharset } from '@/features/settings/presets';
+import { getActiveCharset } from '@/features/settings/presets';
 import { cn } from '@/shared/utils/cn';
+import type { RenderSettings } from '@/shared/types';
+
+type WordMode = RenderSettings['wordMode'];
+
+const WORD_MODES: { value: WordMode; label: string }[] = [
+  { value: 'cycle', label: 'Cycle' },
+  { value: 'density', label: 'Density' },
+];
 
 export function CharsetPicker() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
 
-  const activeChars = getActiveCharset(settings.charsetPreset, settings.customCharset);
+  const activeChars = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const isCustom = settings.charsetPreset === 'custom';
+  const isWord = settings.charsetPreset === 'word';
 
   return (
     <div className="space-y-3">
-      <Select.Root
-        value={settings.charsetPreset}
-        onValueChange={(v) => updateSettings({ charsetPreset: v })}
-      >
-        <Select.Trigger
-          className={cn(
-            'w-full flex items-center justify-between px-3 py-2 rounded-md text-sm',
-            'bg-secondary border border-input hover:bg-accent transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-ring',
-          )}
-        >
-          <Select.Value />
-          <Select.Icon>
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          </Select.Icon>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content
-            className="bg-popover border rounded-lg shadow-lg overflow-hidden z-50"
-            position="popper"
-            sideOffset={4}
-          >
-            <Select.Viewport className="p-1">
-              {CHARSET_PRESETS.map((preset) => (
-                <Select.Item
-                  key={preset.key}
-                  value={preset.key}
-                  className={cn(
-                    'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm cursor-pointer',
-                    'outline-none data-[highlighted]:bg-accent',
-                  )}
-                >
-                  <Select.ItemIndicator>
-                    <Check className="w-3.5 h-3.5" />
-                  </Select.ItemIndicator>
-                  <Select.ItemText>{preset.name}</Select.ItemText>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {preset.description}
-                  </span>
-                </Select.Item>
-              ))}
-              <Select.Item
-                value="custom"
+      {isWord && (
+        <>
+          <input
+            type="text"
+            value={settings.wordSequence}
+            onChange={(e) => updateSettings({ wordSequence: e.target.value })}
+            placeholder="Enter word or phrase..."
+            className={cn(
+              'w-full px-3 py-2 rounded-md text-sm',
+              'bg-secondary border border-input',
+              'focus:outline-none focus:ring-2 focus:ring-ring',
+            )}
+          />
+          <div className="flex rounded-md bg-secondary p-0.5">
+            {WORD_MODES.map((mode) => (
+              <button
+                key={mode.value}
+                onClick={() => updateSettings({ wordMode: mode.value })}
                 className={cn(
-                  'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm cursor-pointer',
-                  'outline-none data-[highlighted]:bg-accent',
+                  'flex-1 px-2 py-1.5 text-xs font-medium rounded-sm transition-colors',
+                  settings.wordMode === mode.value
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <Select.ItemIndicator>
-                  <Check className="w-3.5 h-3.5" />
-                </Select.ItemIndicator>
-                <Select.ItemText>Custom</Select.ItemText>
-              </Select.Item>
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {settings.wordMode === 'cycle'
+              ? 'Tiles the word across the grid; visibility controlled by luminance threshold.'
+              : 'Uses the word characters as a luminance ramp from light to dark.'}
+          </p>
+        </>
+      )}
 
       {isCustom && (
         <input

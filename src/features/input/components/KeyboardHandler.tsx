@@ -43,7 +43,8 @@ export function KeyboardHandler() {
         case '3':
         case '4':
         case '5':
-        case '6': {
+        case '6':
+        case '7': {
           const idx = parseInt(e.key, 10) - 1;
           const preset = CHARSET_PRESETS[idx];
           if (preset) {

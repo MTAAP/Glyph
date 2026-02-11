@@ -38,7 +38,49 @@ export function mapToCharacters(
     );
   }
 
+  // Word cycle mode -- tiles characters by grid position with threshold masking
+  if (settings.charsetPreset === 'word' && settings.wordMode === 'cycle') {
+    return buildWordCycleGrid(samples, settings, charset);
+  }
+
   return buildCharsetGrid(samples, settings, charset);
+}
+
+function buildWordCycleGrid(
+  samples: SampleResult,
+  settings: RenderSettings,
+  charset: string,
+): CharacterGrid {
+  const { rows, cols } = samples;
+  const luminanceGrid = computeLuminanceGrid(samples.samples);
+  const word = charset.length > 0 ? charset : ' ';
+  const grid: CharacterGrid = new Array(rows);
+
+  for (let y = 0; y < rows; y++) {
+    const row = new Array<CharacterCell>(cols);
+
+    for (let x = 0; x < cols; x++) {
+      const lum = luminanceGrid[y][x];
+      const visible = settings.invertRamp
+        ? lum <= settings.wordThreshold
+        : lum > settings.wordThreshold;
+
+      const charIndex = (y * cols + x) % word.length;
+      const char = visible ? word[charIndex] : ' ';
+      const cell: CharacterCell = { char };
+
+      if (settings.colorMode !== 'mono') {
+        const sample = samples.samples[y][x];
+        applyColor(cell, sample.r, sample.g, sample.b, settings.colorMode);
+      }
+
+      row[x] = cell;
+    }
+
+    grid[y] = row;
+  }
+
+  return grid;
 }
 
 function buildBrailleGrid(

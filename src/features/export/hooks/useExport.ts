@@ -144,11 +144,12 @@ export function useExport() {
 
           case 'gif': {
             const { formatGif } = await import('../formatters/gif.ts');
+            const effectiveFps = settings.targetFPS * settings.playbackSpeed;
             const gifFrames = await getFrames(grid, state, (p) =>
               setProgress(Math.round(p * 0.8)),
             );
             const blob = await formatGif(gifFrames, {
-              fps: settings.targetFPS,
+              fps: effectiveFps,
               quality: extraOptions?.gifQuality,
               loop: extraOptions?.gifLoop,
               onProgress: (p) => setProgress(80 + Math.round(p * 0.2)),
@@ -159,9 +160,10 @@ export function useExport() {
 
           case 'webm': {
             const { formatWebm } = await import('../formatters/webm.ts');
+            const effectiveFps = settings.targetFPS * settings.playbackSpeed;
             const webmFrames = await getFrames(grid, state, setProgress);
             const blob = await formatWebm(webmFrames, {
-              fps: settings.targetFPS,
+              fps: effectiveFps,
               bitrate: extraOptions?.webmBitrate,
             });
             triggerDownload(blob, filename);
@@ -172,11 +174,12 @@ export function useExport() {
             const { formatFrameSequence } = await import(
               '../formatters/frames.ts'
             );
+            const effectiveFps = settings.targetFPS * settings.playbackSpeed;
             const seqFrames = await getFrames(grid, state, setProgress);
             const blob = await formatFrameSequence(seqFrames, {
               format: extraOptions?.framesFormat ?? 'txt',
               includeMetadata: extraOptions?.includeMetadata,
-              fps: settings.targetFPS,
+              fps: effectiveFps,
               sourceFilename: sourceInfo?.filename,
               settings,
             });

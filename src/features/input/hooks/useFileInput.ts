@@ -29,9 +29,10 @@ export async function processFile(file: File): Promise<void> {
   } else if (VIDEO_TYPES.includes(file.type)) {
     const video = document.createElement('video');
     const url = URL.createObjectURL(file);
+    video.preload = 'auto';
 
     await new Promise<void>((resolve, reject) => {
-      video.onloadedmetadata = () => resolve();
+      video.onloadeddata = () => resolve();
       video.onerror = () => reject(new Error('Failed to load video'));
       video.src = url;
     });

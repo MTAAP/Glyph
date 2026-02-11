@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { useAppStore } from '@/features/settings/store';
 import { RenderSettings } from '@/features/settings/components/RenderSettings';
 import { ResolutionControls } from '@/features/settings/components/ResolutionControls';
+import { PresetSelector } from '@/features/settings/components/PresetSelector';
 import { CharsetPicker } from '@/features/settings/components/CharsetPicker';
 import { ColorControls } from '@/features/settings/components/ColorControls';
 import { VideoControls } from '@/features/settings/components/VideoControls';
@@ -42,6 +43,8 @@ function Section({
 
 export function Sidebar() {
   const sourceInfo = useAppStore((s) => s.sourceInfo);
+  const charsetPreset = useAppStore((s) => s.settings.charsetPreset);
+  const hasCharsetOptions = charsetPreset === 'custom' || charsetPreset === 'word';
 
   const defaultSections = ['input', 'rendering', 'resolution', 'characters', 'color', 'export'];
   if (sourceInfo?.type === 'video') {
@@ -51,6 +54,9 @@ export function Sidebar() {
   return (
     <aside className="w-[280px] max-lg:w-full border-r max-lg:border-r-0 max-lg:border-b overflow-y-auto shrink-0">
       <div className="px-4 py-2">
+        <div className="pb-2">
+          <PresetSelector />
+        </div>
         <Accordion.Root type="multiple" defaultValue={defaultSections}>
           <Section value="input" title="Input">
             <URLInput />
@@ -61,9 +67,11 @@ export function Sidebar() {
           <Section value="resolution" title="Resolution">
             <ResolutionControls />
           </Section>
-          <Section value="characters" title="Characters">
-            <CharsetPicker />
-          </Section>
+          {hasCharsetOptions && (
+            <Section value="characters" title="Characters">
+              <CharsetPicker />
+            </Section>
+          )}
           <Section value="color" title="Color">
             <ColorControls />
           </Section>

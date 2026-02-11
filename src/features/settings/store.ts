@@ -59,6 +59,9 @@ const DEFAULT_SETTINGS: RenderSettings = {
 
   charsetPreset: 'classic',
   customCharset: ' .:-=+*#%@',
+  wordSequence: 'GLYPH',
+  wordMode: 'cycle' as const,
+  wordThreshold: 128,
 
   colorMode: 'mono',
   colorDepth: 256,

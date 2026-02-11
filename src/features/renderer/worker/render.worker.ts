@@ -15,7 +15,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     const imageData = new Uint8ClampedArray(request.imageData);
     const { settings, width, sourceWidth, sourceHeight } = request;
 
-    const charset = getActiveCharset(settings.charsetPreset, settings.customCharset);
+    const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
 
     const samples = sampleGrid(
       imageData,

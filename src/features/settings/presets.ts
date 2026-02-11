@@ -42,6 +42,12 @@ export const CHARSET_PRESETS: CharsetPreset[] = [
     chars: ' .oO0@#',
     description: 'Readable, familiar',
   },
+  {
+    key: 'word',
+    name: 'Word Sequence',
+    chars: 'word',
+    description: 'Repeating word or phrase',
+  },
 ];
 
 export const DEFAULT_CHARSET = 'classic';
@@ -50,9 +56,10 @@ export function getCharsetByKey(key: string): CharsetPreset | undefined {
   return CHARSET_PRESETS.find((p) => p.key === key);
 }
 
-export function getActiveCharset(preset: string, custom: string): string {
+export function getActiveCharset(preset: string, custom: string, wordSequence?: string): string {
   if (preset === 'custom') return custom;
   if (preset === 'braille') return 'braille';
+  if (preset === 'word') return wordSequence || 'GLYPH';
   const found = getCharsetByKey(preset);
   return found ? found.chars : CHARSET_PRESETS[0].chars;
 }

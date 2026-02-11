@@ -39,7 +39,7 @@ function renderOnMainThread(
   sourceHeight: number,
 ): void {
   const start = performance.now();
-  const charset = getActiveCharset(settings.charsetPreset, settings.customCharset);
+  const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const data = imageData.data;
 
   const samples = sampleGrid(
