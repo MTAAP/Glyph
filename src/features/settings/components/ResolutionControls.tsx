@@ -26,20 +26,20 @@ export function ResolutionControls() {
             value={settings.outputWidth}
             onChange={(e) => {
               const v = parseInt(e.target.value, 10);
-              if (!isNaN(v) && v >= 20 && v <= 300) {
+              if (!isNaN(v) && v >= 100 && v <= 600) {
                 updateSettings({ outputWidth: v });
               }
             }}
-            min={20}
-            max={300}
+            min={100}
+            max={600}
             className="w-16 text-right text-xs bg-secondary rounded-md px-2 py-1 tabular-nums border-none outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
         <Slider.Root
           value={[settings.outputWidth]}
           onValueChange={([v]) => updateSettings({ outputWidth: v })}
-          min={20}
-          max={300}
+          min={100}
+          max={600}
           step={1}
           className="relative flex items-center select-none touch-none h-5"
         >

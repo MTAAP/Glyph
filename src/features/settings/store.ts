@@ -46,9 +46,12 @@ export interface Toast {
 }
 
 const DEFAULT_SETTINGS: RenderSettings = {
-  outputWidth: 80,
+  outputWidth: 200,
   aspectRatioCorrection: 0.5,
   lockAspectRatio: true,
+
+  brightness: 0,
+  contrast: 0,
 
   enableLuminance: true,
   enableEdge: false,

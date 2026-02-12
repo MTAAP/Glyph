@@ -3,6 +3,9 @@ export interface RenderSettings {
   aspectRatioCorrection: number;
   lockAspectRatio: boolean;
 
+  brightness: number;
+  contrast: number;
+
   enableLuminance: boolean;
   enableEdge: boolean;
   enableDithering: boolean;

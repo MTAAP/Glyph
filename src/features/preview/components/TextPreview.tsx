@@ -44,7 +44,6 @@ export function TextPreview({
             fontSize: FONT_SIZE,
             lineHeight: LINE_HEIGHT,
             color: settings.monoFgColor,
-            backgroundColor: settings.monoBgColor,
           }}
         >
           {grid.map((row, y) => (
@@ -108,8 +107,10 @@ export function TextPreview({
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;
 
+  const bgColor = settings.colorMode === 'mono' ? settings.monoBgColor : undefined;
+
   return (
-    <div style={{ width: scaledWidth, height: scaledHeight, overflow: 'hidden' }}>
+    <div style={{ width: scaledWidth, height: scaledHeight, overflow: 'hidden', backgroundColor: bgColor }}>
       <div
         style={{
           transform: `scale(${scale})`,
