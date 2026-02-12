@@ -5,22 +5,25 @@ import { DragDrop } from '@/features/input/components/DragDrop';
 import { TextPreview } from '@/features/preview/components/TextPreview';
 import { CanvasPreview } from '@/features/preview/components/CanvasPreview';
 import { VideoTransport } from '@/features/preview/components/VideoTransport';
+import { AnimationTransport } from '@/features/animation/components/AnimationTransport';
 import { CropOverlay } from '@/features/crop/components/CropOverlay';
 import { useRenderer } from '@/features/renderer/hooks/useRenderer';
 import { useVideoFrames } from '@/features/renderer/hooks/useVideoFrames';
+import { useAnimationLoop } from '@/features/animation/hooks/useAnimationLoop';
 
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   useRenderer();
   useVideoFrames();
+  const animatedGrid = useAnimationLoop();
   const sourceInfo = useAppStore((s) => s.sourceInfo);
   const renderResult = useAppStore((s) => s.renderResult);
   const settings = useAppStore((s) => s.settings);
   const cropEnabled = useAppStore((s) => s.cropEnabled);
 
   const hasSource = sourceInfo !== null;
-  const hasResult = renderResult !== null;
+  const displayGrid = animatedGrid ?? renderResult?.grid ?? null;
   const showCrop = cropEnabled && hasSource;
   // Use CanvasPreview for color modes, TextPreview for mono
   const useCanvasRenderer = settings.colorMode !== 'mono';
@@ -38,11 +41,11 @@ export function Canvas() {
           </div>
         )}
 
-        {hasSource && !showCrop && hasResult && (
+        {hasSource && !showCrop && displayGrid && (
           useCanvasRenderer ? (
-            <CanvasPreview grid={renderResult.grid} containerRef={containerRef} />
+            <CanvasPreview grid={displayGrid} containerRef={containerRef} />
           ) : (
-            <TextPreview grid={renderResult.grid} containerRef={containerRef} />
+            <TextPreview grid={displayGrid} containerRef={containerRef} />
           )
         )}
 
@@ -51,6 +54,8 @@ export function Canvas() {
 
       {/* Video transport bar */}
       {sourceInfo?.type === 'video' && <VideoTransport />}
+      {/* Animation transport bar */}
+      <AnimationTransport />
     </div>
   );
 }

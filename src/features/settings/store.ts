@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { RenderSettings, SourceInfo, RenderResult } from '@/shared/types';
+import type { RenderSettings, SourceInfo, RenderResult, AnimationSettings, ActiveEffect } from '@/shared/types';
 import type { CropRect, AspectRatioPreset } from '@/features/crop/types';
 import { DEFAULT_CROP, enforceAspectOnRect } from '@/features/crop/types';
+import { getAnimationPreset } from '@/features/animation/presets';
 
 interface AppState {
   // Source media
@@ -26,6 +27,10 @@ interface AppState {
   cropEnabled: boolean;
   cropRect: CropRect | null;
   cropAspectRatio: AspectRatioPreset;
+
+  // Animation
+  animation: AnimationSettings;
+  animationPlaying: boolean;
 
   // Cell spacing (display-only, doesn't affect render pipeline)
   cellSpacingX: number;
@@ -54,6 +59,15 @@ interface AppState {
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   addToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;
+
+  // Animation actions
+  updateAnimation: (partial: Partial<AnimationSettings>) => void;
+  setAnimationPlaying: (playing: boolean) => void;
+  addEffect: (key: string, params?: Record<string, number>) => void;
+  removeEffect: (index: number) => void;
+  updateEffectParams: (index: number, params: Record<string, number>) => void;
+  reorderEffects: (fromIndex: number, toIndex: number) => void;
+  applyAnimationPreset: (presetKey: string) => void;
 }
 
 export interface Toast {
@@ -96,6 +110,15 @@ const DEFAULT_SETTINGS: RenderSettings = {
   loop: true,
 };
 
+const DEFAULT_ANIMATION: AnimationSettings = {
+  enabled: false,
+  effects: [],
+  fps: 24,
+  cycleDuration: 3,
+  loopMode: 'loop',
+  presetKey: 'none',
+};
+
 let toastCounter = 0;
 
 export const useAppStore = create<AppState>((set) => ({
@@ -112,6 +135,9 @@ export const useAppStore = create<AppState>((set) => ({
   isPlaying: false,
   currentFrame: 0,
   totalFrames: 0,
+
+  animation: DEFAULT_ANIMATION,
+  animationPlaying: false,
 
   cropEnabled: false,
   cropRect: null,
@@ -196,4 +222,75 @@ export const useAppStore = create<AppState>((set) => ({
     }, 5000);
   },
   removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+
+  // Animation actions
+  updateAnimation: (partial) =>
+    set((state) => {
+      const next = { ...state.animation, ...partial };
+      // When animation is disabled, stop playback
+      if (!next.enabled) {
+        return { animation: next, animationPlaying: false };
+      }
+      return { animation: next };
+    }),
+  setAnimationPlaying: (animationPlaying) => set({ animationPlaying }),
+  addEffect: (key, params) =>
+    set((state) => {
+      const effect: ActiveEffect = { key, params: params ?? {} };
+      return {
+        animation: {
+          ...state.animation,
+          effects: [...state.animation.effects, effect],
+          presetKey: 'custom',
+        },
+      };
+    }),
+  removeEffect: (index) =>
+    set((state) => {
+      const effects = state.animation.effects.filter((_, i) => i !== index);
+      return {
+        animation: { ...state.animation, effects, presetKey: 'custom' },
+      };
+    }),
+  updateEffectParams: (index, params) =>
+    set((state) => {
+      const effects = state.animation.effects.map((e, i) =>
+        i === index ? { ...e, params: { ...e.params, ...params } } : e,
+      );
+      return {
+        animation: { ...state.animation, effects, presetKey: 'custom' },
+      };
+    }),
+  reorderEffects: (fromIndex, toIndex) =>
+    set((state) => {
+      const effects = [...state.animation.effects];
+      const [moved] = effects.splice(fromIndex, 1);
+      effects.splice(toIndex, 0, moved);
+      return {
+        animation: { ...state.animation, effects, presetKey: 'custom' },
+      };
+    }),
+  applyAnimationPreset: (presetKey) =>
+    set((state) => {
+      if (presetKey === 'none') {
+        return { animation: { ...DEFAULT_ANIMATION }, animationPlaying: false };
+      }
+      const preset = getAnimationPreset(presetKey);
+      if (!preset) return {};
+      const updates: Partial<AppState> = {
+        animation: {
+          ...DEFAULT_ANIMATION,
+          enabled: true,
+          effects: preset.effects.map((e) => ({ ...e, params: { ...e.params } })),
+          cycleDuration: preset.cycleDuration,
+          loopMode: preset.loopMode,
+          presetKey,
+        },
+      };
+      // Auto-switch color mode when the preset requires it
+      if (preset.colorMode && state.settings.colorMode !== preset.colorMode) {
+        updates.settings = { ...state.settings, colorMode: preset.colorMode };
+      }
+      return updates;
+    }),
 }));
