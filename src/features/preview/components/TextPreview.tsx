@@ -102,7 +102,7 @@ export function TextPreview({
         ))}
       </pre>
     );
-  }, [grid, settings.colorMode, settings.monoFgColor, settings.monoBgColor]);
+  }, [grid, settings.colorMode, settings.monoFgColor]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;

@@ -1,13 +1,10 @@
 import { useRef, useCallback } from 'react';
 import { FolderOpen, X } from 'lucide-react';
-import { processFile } from '@/features/input/hooks/useFileInput';
+import { processFile, ACCEPTED_FILE_TYPES, revokeActiveBlobUrl } from '@/features/input/hooks/useFileInput';
 import { useAppStore } from '@/features/settings/store';
 import { URLInput } from './URLInput';
 import { cn } from '@/shared/utils/cn';
 
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
-const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
-const ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES];
 const MAX_WARN_SIZE = 200 * 1024 * 1024; // 200 MB
 
 export function InputControls() {
@@ -20,7 +17,7 @@ export function InputControls() {
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!ACCEPTED_TYPES.includes(file.type)) {
+      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
         addToast({ type: 'error', message: `Unsupported file type: ${file.type}` });
         return;
       }
@@ -50,6 +47,7 @@ export function InputControls() {
   }, []);
 
   const clearSource = useCallback(() => {
+    revokeActiveBlobUrl();
     setSource(null, null, null);
     setSourceCanvas(null);
     setRenderResult(null);
@@ -87,7 +85,7 @@ export function InputControls() {
       <input
         ref={fileInputRef}
         type="file"
-        accept={ACCEPTED_TYPES.join(',')}
+        accept={ACCEPTED_FILE_TYPES.join(',')}
         className="hidden"
         onChange={onFileChange}
       />
