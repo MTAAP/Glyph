@@ -33,6 +33,7 @@ function makeSettings(overrides: Partial<RenderSettings> = {}): RenderSettings {
     wordSequence: 'GLYPH',
     wordMode: 'cycle' as const,
     wordThreshold: 128,
+    cycleDirection: 'ltr' as const,
     colorMode: 'mono',
     colorDepth: 256,
     monoFgColor: '#ffffff',
@@ -422,6 +423,102 @@ describe('mapToCharacters', () => {
       const result = mapToCharacters(samples, settings, '', dummyImageData, 4, 4);
 
       expect(result[0][0].char).toBe(' ');
+    });
+
+    it('assigns characters only to visible cells (no index gaps)', () => {
+      // Alternating bright/dark pixels in a 1×5 row
+      const bright = { r: 255, g: 255, b: 255, a: 255 };
+      const dark = { r: 0, g: 0, b: 0, a: 255 };
+      const samples = makeSamples([[bright, dark, bright, dark, bright]]);
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'HELLO',
+        wordThreshold: 128,
+      });
+      const result = mapToCharacters(samples, settings, 'HELLO', dummyImageData, 4, 4);
+
+      // Only bright cells are visible — should get H, E, L sequentially
+      expect(result[0][0].char).toBe('H');
+      expect(result[0][1].char).toBe(' ');
+      expect(result[0][2].char).toBe('E');
+      expect(result[0][3].char).toBe(' ');
+      expect(result[0][4].char).toBe('L');
+    });
+
+    it('RTL direction assigns right-to-left', () => {
+      const samples = uniformSamples(1, 4, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'ABCD',
+        wordThreshold: 0,
+        cycleDirection: 'rtl',
+      });
+      const result = mapToCharacters(samples, settings, 'ABCD', dummyImageData, 4, 4);
+
+      // RTL: rightmost cell gets first char
+      expect(result[0][3].char).toBe('A');
+      expect(result[0][2].char).toBe('B');
+      expect(result[0][1].char).toBe('C');
+      expect(result[0][0].char).toBe('D');
+    });
+
+    it('TTB direction assigns top-to-bottom column-first', () => {
+      const samples = uniformSamples(3, 2, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'ABCDEF',
+        wordThreshold: 0,
+        cycleDirection: 'ttb',
+      });
+      const result = mapToCharacters(samples, settings, 'ABCDEF', dummyImageData, 4, 4);
+
+      // TTB: column 0 top-to-bottom, then column 1 top-to-bottom
+      expect(result[0][0].char).toBe('A');
+      expect(result[1][0].char).toBe('B');
+      expect(result[2][0].char).toBe('C');
+      expect(result[0][1].char).toBe('D');
+      expect(result[1][1].char).toBe('E');
+      expect(result[2][1].char).toBe('F');
+    });
+
+    it('reverse direction assigns bottom-right to top-left', () => {
+      const samples = uniformSamples(2, 3, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'ABCDEF',
+        wordThreshold: 0,
+        cycleDirection: 'reverse',
+      });
+      const result = mapToCharacters(samples, settings, 'ABCDEF', dummyImageData, 4, 4);
+
+      // Reverse: bottom-right first
+      expect(result[1][2].char).toBe('A');
+      expect(result[1][1].char).toBe('B');
+      expect(result[1][0].char).toBe('C');
+      expect(result[0][2].char).toBe('D');
+      expect(result[0][1].char).toBe('E');
+      expect(result[0][0].char).toBe('F');
+    });
+
+    it('single-char word fills all visible cells with same character', () => {
+      const samples = uniformSamples(2, 2, { r: 255, g: 255, b: 255, a: 255 });
+      const settings = makeSettings({
+        charsetPreset: 'word',
+        wordMode: 'cycle',
+        wordSequence: 'X',
+        wordThreshold: 0,
+      });
+      const result = mapToCharacters(samples, settings, 'X', dummyImageData, 4, 4);
+
+      for (const row of result) {
+        for (const cell of row) {
+          expect(cell.char).toBe('X');
+        }
+      }
     });
   });
 

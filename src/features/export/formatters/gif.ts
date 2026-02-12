@@ -10,6 +10,8 @@ interface GifOptions {
   fontSize?: number;
   fontFamily?: string;
   background?: string;
+  cellSpacingX?: number;
+  cellSpacingY?: number;
   onProgress?: (percent: number) => void;
 }
 
@@ -23,6 +25,8 @@ export function formatGif(
   const fontSize = options.fontSize ?? 14;
   const fontFamily = options.fontFamily ?? 'monospace';
   const background = options.background ?? '#1a1a1a';
+  const spX = options.cellSpacingX ?? 1.0;
+  const spY = options.cellSpacingY ?? 1.0;
   const padding = 10;
   const delay = Math.round(1000 / fps);
 
@@ -42,8 +46,11 @@ export function formatGif(
   const charWidth = metrics.width;
   const lineHeight = fontSize * 1.2;
 
-  canvas.width = Math.ceil(cols * charWidth + 2 * padding);
-  canvas.height = Math.ceil(rows * lineHeight + 2 * padding);
+  const cellPitchX = charWidth * spX;
+  const cellPitchY = lineHeight * spY;
+
+  canvas.width = Math.ceil(cols * cellPitchX + 2 * padding);
+  canvas.height = Math.ceil(rows * cellPitchY + 2 * padding);
 
   // Reset after resize
   ctx.font = font;
@@ -52,7 +59,7 @@ export function formatGif(
   const encoderFrames: UnencodedFrame[] = [];
 
   for (let i = 0; i < frames.length; i++) {
-    renderGridToCanvas(frames[i], canvas, ctx, charWidth, lineHeight, padding, background);
+    renderGridToCanvas(frames[i], canvas, ctx, charWidth, lineHeight, padding, background, spX, spY);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     // Copy pixel data to a plain ArrayBuffer-backed view for TS 5.9 BufferSource compat
     const pixelCopy = new Uint8ClampedArray(imageData.data.length) as Uint8ClampedArray<ArrayBuffer>;

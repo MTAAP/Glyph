@@ -26,23 +26,30 @@ export function TextPreview({
   containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const settings = useAppStore((s) => s.settings);
+  const cellSpacingX = useAppStore((s) => s.cellSpacingX);
+  const cellSpacingY = useAppStore((s) => s.cellSpacingY);
 
   const charWidth = useMemo(() => measureCharWidth(), []);
   const cols = grid[0]?.length ?? 0;
   const rows = grid.length;
-  const contentWidth = cols * charWidth;
-  const contentHeight = rows * FONT_SIZE * LINE_HEIGHT;
+  const contentWidth = cols * charWidth * cellSpacingX;
+  const contentHeight = rows * FONT_SIZE * LINE_HEIGHT * cellSpacingY;
 
   const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight);
 
   const content = useMemo(() => {
+    const spacingStyle = {
+      lineHeight: LINE_HEIGHT * cellSpacingY,
+      letterSpacing: `${charWidth * (cellSpacingX - 1)}px`,
+    };
+
     if (settings.colorMode === 'mono') {
       return (
         <pre
           className="font-mono whitespace-pre select-all"
           style={{
             fontSize: FONT_SIZE,
-            lineHeight: LINE_HEIGHT,
+            ...spacingStyle,
             color: settings.monoFgColor,
           }}
         >
@@ -59,7 +66,7 @@ export function TextPreview({
       return (
         <pre
           className="font-mono whitespace-pre select-all"
-          style={{ fontSize: FONT_SIZE, lineHeight: LINE_HEIGHT }}
+          style={{ fontSize: FONT_SIZE, ...spacingStyle }}
         >
           {grid.map((row, y) => (
             <div key={y}>
@@ -83,7 +90,7 @@ export function TextPreview({
     return (
       <pre
         className="font-mono whitespace-pre select-all"
-        style={{ fontSize: FONT_SIZE, lineHeight: LINE_HEIGHT }}
+        style={{ fontSize: FONT_SIZE, ...spacingStyle }}
       >
         {grid.map((row, y) => (
           <div key={y}>
@@ -102,7 +109,7 @@ export function TextPreview({
         ))}
       </pre>
     );
-  }, [grid, settings.colorMode, settings.monoFgColor]);
+  }, [grid, settings.colorMode, settings.monoFgColor, charWidth, cellSpacingX, cellSpacingY]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;

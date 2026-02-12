@@ -4,6 +4,8 @@ interface HtmlOptions {
   fontSize?: number;
   fontFamily?: string;
   background?: string;
+  cellSpacingX?: number;
+  cellSpacingY?: number;
 }
 
 function escapeHtml(str: string): string {
@@ -35,6 +37,8 @@ export function formatHtml(
   const fontSize = options.fontSize ?? 12;
   const fontFamily = options.fontFamily ?? 'monospace';
   const background = options.background ?? '#1a1a1a';
+  const spX = options.cellSpacingX ?? 1.0;
+  const spY = options.cellSpacingY ?? 1.0;
 
   const bodyLines: string[] = [];
 
@@ -88,7 +92,8 @@ export function formatHtml(
   pre {
     font-family: ${fontFamily};
     font-size: ${fontSize}px;
-    line-height: 1.2;
+    line-height: ${1.2 * spY};
+    letter-spacing: ${(fontSize * 0.6 * (spX - 1)).toFixed(2)}px;
     margin: 0;
     white-space: pre;
   }

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { RenderSettings, SourceInfo, RenderResult } from '@/shared/types';
+import type { CropRect, AspectRatioPreset } from '@/features/crop/types';
+import { DEFAULT_CROP, enforceAspectOnRect } from '@/features/crop/types';
 
 interface AppState {
   // Source media
@@ -20,6 +22,16 @@ interface AppState {
   currentFrame: number;
   totalFrames: number;
 
+  // Crop state
+  cropEnabled: boolean;
+  cropRect: CropRect | null;
+  cropAspectRatio: AspectRatioPreset;
+
+  // Cell spacing (display-only, doesn't affect render pipeline)
+  cellSpacingX: number;
+  cellSpacingY: number;
+  spacingLinked: boolean;
+
   // UI state
   theme: 'light' | 'dark' | 'system';
   toasts: Toast[];
@@ -33,6 +45,12 @@ interface AppState {
   setIsPlaying: (playing: boolean) => void;
   setCurrentFrame: (frame: number) => void;
   setTotalFrames: (total: number) => void;
+  setCropEnabled: (enabled: boolean) => void;
+  setCropRect: (rect: CropRect | null) => void;
+  setCropAspectRatio: (ratio: AspectRatioPreset) => void;
+  resetCrop: () => void;
+  setCellSpacing: (axis: 'x' | 'y' | 'both', value: number) => void;
+  setSpacingLinked: (linked: boolean) => void;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   addToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;
@@ -65,6 +83,7 @@ const DEFAULT_SETTINGS: RenderSettings = {
   wordSequence: 'GLYPH',
   wordMode: 'cycle' as const,
   wordThreshold: 128,
+  cycleDirection: 'ltr',
 
   colorMode: 'mono',
   colorDepth: 256,
@@ -94,10 +113,25 @@ export const useAppStore = create<AppState>((set) => ({
   currentFrame: 0,
   totalFrames: 0,
 
+  cropEnabled: false,
+  cropRect: null,
+  cropAspectRatio: 'free',
+
+  cellSpacingX: 1.0,
+  cellSpacingY: 1.0,
+  spacingLinked: true,
+
   theme: 'system',
   toasts: [],
 
-  setSource: (image, video, info) => set({ sourceImage: image, sourceVideo: video, sourceInfo: info }),
+  setSource: (image, video, info) => set({
+    sourceImage: image,
+    sourceVideo: video,
+    sourceInfo: info,
+    cropEnabled: false,
+    cropRect: null,
+    cropAspectRatio: 'free',
+  }),
   setSourceCanvas: (canvas) => set({ sourceCanvas: canvas }),
   updateSettings: (partial) =>
     set((state) => {
@@ -116,6 +150,43 @@ export const useAppStore = create<AppState>((set) => ({
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentFrame: (currentFrame) => set({ currentFrame }),
   setTotalFrames: (totalFrames) => set({ totalFrames }),
+  setCropEnabled: (cropEnabled) => set((state) => {
+    if (cropEnabled && !state.cropRect) {
+      // Initialize with default crop on first enable
+      const rect = enforceAspectOnRect(DEFAULT_CROP, state.cropAspectRatio);
+      return { cropEnabled: true, cropRect: rect };
+    }
+    // Keep cropRect when disabling so it's remembered on re-enable
+    return { cropEnabled };
+  }),
+  setCropRect: (cropRect) => set({ cropRect }),
+  setCropAspectRatio: (cropAspectRatio) => set((state) => {
+    if (state.cropRect && cropAspectRatio !== 'free') {
+      return { cropAspectRatio, cropRect: enforceAspectOnRect(state.cropRect, cropAspectRatio) };
+    }
+    return { cropAspectRatio };
+  }),
+  resetCrop: () => set({
+    cropRect: null,
+    cropEnabled: false,
+  }),
+  setCellSpacing: (axis, value) => {
+    const clamped = Math.min(3.0, Math.max(0.5, value));
+    set((state) => {
+      if (state.spacingLinked || axis === 'both') {
+        return { cellSpacingX: clamped, cellSpacingY: clamped };
+      }
+      if (axis === 'x') return { cellSpacingX: clamped };
+      return { cellSpacingY: clamped };
+    });
+  },
+  setSpacingLinked: (linked) => set((state) => {
+    if (linked) {
+      // Sync Y to X when re-linking
+      return { spacingLinked: true, cellSpacingY: state.cellSpacingX };
+    }
+    return { spacingLinked: false };
+  }),
   setTheme: (theme) => set({ theme }),
   addToast: (toast) => {
     const id = `toast-${++toastCounter}`;

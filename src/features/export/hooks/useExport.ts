@@ -43,7 +43,7 @@ async function getFrames(
   state: ReturnType<typeof useAppStore.getState>,
   onProgress?: (percent: number) => void,
 ): Promise<CharacterGrid[]> {
-  const { sourceVideo, sourceInfo, settings, totalFrames } = state;
+  const { sourceVideo, sourceInfo, settings, totalFrames, cropRect } = state;
 
   if (sourceInfo?.type !== 'video' || !sourceVideo || !sourceInfo.duration) {
     return [currentGrid];
@@ -64,6 +64,7 @@ async function getFrames(
       totalFrames,
       sourceInfo.duration,
       onProgress,
+      cropRect,
     );
   } finally {
     if (wasPlaying) {
@@ -82,7 +83,7 @@ export function useExport() {
       extraOptions?: Partial<ExportOptions>,
     ) => {
       const state = useAppStore.getState();
-      const { renderResult, sourceInfo, settings } = state;
+      const { renderResult, sourceInfo, settings, cellSpacingX, cellSpacingY } = state;
 
       if (!renderResult) return;
 
@@ -126,6 +127,8 @@ export function useExport() {
               fontSize: extraOptions?.htmlFontSize,
               fontFamily: extraOptions?.htmlFontFamily,
               background: extraOptions?.htmlBackground,
+              cellSpacingX,
+              cellSpacingY,
             });
             const blob = new Blob([text], { type: 'text/html' });
             triggerDownload(blob, filename);
@@ -137,6 +140,8 @@ export function useExport() {
             const blob = await formatPng(grid, {
               fontSize: extraOptions?.pngFontSize,
               background: extraOptions?.pngBackground,
+              cellSpacingX,
+              cellSpacingY,
             });
             triggerDownload(blob, filename);
             break;
@@ -152,6 +157,8 @@ export function useExport() {
               fps: effectiveFps,
               quality: extraOptions?.gifQuality,
               loop: extraOptions?.gifLoop,
+              cellSpacingX,
+              cellSpacingY,
               onProgress: (p) => setProgress(80 + Math.round(p * 0.2)),
             });
             triggerDownload(blob, filename);
@@ -165,6 +172,8 @@ export function useExport() {
             const blob = await formatWebm(webmFrames, {
               fps: effectiveFps,
               bitrate: extraOptions?.webmBitrate,
+              cellSpacingX,
+              cellSpacingY,
             });
             triggerDownload(blob, filename);
             break;
@@ -206,7 +215,7 @@ export function useExport() {
       extraOptions?: Partial<ExportOptions>,
     ) => {
       const state = useAppStore.getState();
-      const { renderResult, settings } = state;
+      const { renderResult, settings, cellSpacingX, cellSpacingY } = state;
 
       if (!renderResult) return;
 
@@ -231,6 +240,8 @@ export function useExport() {
             fontSize: extraOptions?.htmlFontSize,
             fontFamily: extraOptions?.htmlFontFamily,
             background: extraOptions?.htmlBackground,
+            cellSpacingX,
+            cellSpacingY,
           });
           break;
       }
