@@ -1,3 +1,5 @@
+export type CycleDirection = 'ltr' | 'rtl' | 'ttb' | 'reverse';
+
 export interface RenderSettings {
   outputWidth: number;
   aspectRatioCorrection: number;
@@ -18,6 +20,7 @@ export interface RenderSettings {
   wordSequence: string;
   wordMode: 'cycle' | 'density';
   wordThreshold: number;
+  cycleDirection: CycleDirection;
 
   colorMode: 'mono' | 'foreground' | 'full';
   colorDepth: 8 | 16 | 256 | 'truecolor';
@@ -57,6 +60,8 @@ export interface ExportOptions {
   gifLoop?: boolean;
   webmBitrate?: number;
   framesFormat?: 'txt' | 'ans';
+  cellSpacingX?: number;
+  cellSpacingY?: number;
   includeMetadata?: boolean;
 }
 

@@ -5,6 +5,7 @@ import { DragDrop } from '@/features/input/components/DragDrop';
 import { TextPreview } from '@/features/preview/components/TextPreview';
 import { CanvasPreview } from '@/features/preview/components/CanvasPreview';
 import { VideoTransport } from '@/features/preview/components/VideoTransport';
+import { CropOverlay } from '@/features/crop/components/CropOverlay';
 import { useRenderer } from '@/features/renderer/hooks/useRenderer';
 import { useVideoFrames } from '@/features/renderer/hooks/useVideoFrames';
 
@@ -16,9 +17,11 @@ export function Canvas() {
   const sourceInfo = useAppStore((s) => s.sourceInfo);
   const renderResult = useAppStore((s) => s.renderResult);
   const settings = useAppStore((s) => s.settings);
+  const cropEnabled = useAppStore((s) => s.cropEnabled);
 
   const hasSource = sourceInfo !== null;
   const hasResult = renderResult !== null;
+  const showCrop = cropEnabled && hasSource;
   // Use CanvasPreview for color modes, TextPreview for mono
   const useCanvasRenderer = settings.colorMode !== 'mono';
 
@@ -27,7 +30,7 @@ export function Canvas() {
       <DragDrop containerRef={containerRef} />
 
       {/* Preview area */}
-      <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+      <div className="flex-1 overflow-auto flex items-center justify-center p-4 relative">
         {!hasSource && (
           <div className="flex flex-col items-center gap-3 text-muted-foreground">
             <Upload className="w-10 h-10" />
@@ -35,13 +38,15 @@ export function Canvas() {
           </div>
         )}
 
-        {hasSource && hasResult && (
+        {hasSource && !showCrop && hasResult && (
           useCanvasRenderer ? (
             <CanvasPreview grid={renderResult.grid} containerRef={containerRef} />
           ) : (
             <TextPreview grid={renderResult.grid} containerRef={containerRef} />
           )
         )}
+
+        {showCrop && <CropOverlay />}
       </div>
 
       {/* Video transport bar */}

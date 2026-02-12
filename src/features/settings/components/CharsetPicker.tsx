@@ -1,13 +1,20 @@
 import { useAppStore } from '@/features/settings/store';
 import { getActiveCharset } from '@/features/settings/presets';
 import { cn } from '@/shared/utils/cn';
-import type { RenderSettings } from '@/shared/types';
+import type { RenderSettings, CycleDirection } from '@/shared/types';
 
 type WordMode = RenderSettings['wordMode'];
 
 const WORD_MODES: { value: WordMode; label: string }[] = [
   { value: 'cycle', label: 'Cycle' },
   { value: 'density', label: 'Density' },
+];
+
+const CYCLE_DIRECTIONS: { value: CycleDirection; label: string }[] = [
+  { value: 'ltr', label: 'L\u2192R' },
+  { value: 'rtl', label: 'R\u2192L' },
+  { value: 'ttb', label: 'T\u2193B' },
+  { value: 'reverse', label: 'Rev' },
 ];
 
 export function CharsetPicker() {
@@ -49,6 +56,24 @@ export function CharsetPicker() {
               </button>
             ))}
           </div>
+          {settings.wordMode === 'cycle' && (
+            <div className="flex rounded-md bg-secondary p-0.5">
+              {CYCLE_DIRECTIONS.map((dir) => (
+                <button
+                  key={dir.value}
+                  onClick={() => updateSettings({ cycleDirection: dir.value })}
+                  className={cn(
+                    'flex-1 px-2 py-1.5 text-xs font-medium rounded-sm transition-colors',
+                    settings.cycleDirection === dir.value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {dir.label}
+                </button>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-muted-foreground">
             {settings.wordMode === 'cycle'
               ? 'Tiles the word across the grid; visibility controlled by luminance threshold.'

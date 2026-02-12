@@ -9,6 +9,7 @@ import { ColorControls } from '@/features/settings/components/ColorControls';
 import { VideoControls } from '@/features/settings/components/VideoControls';
 import { ExportBar } from '@/features/export/components/ExportBar';
 import { InputControls } from '@/features/input/components/InputControls';
+import { CropControls } from '@/features/crop/components/CropControls';
 import { cn } from '@/shared/utils/cn';
 
 function Section({
@@ -46,7 +47,7 @@ export function Sidebar() {
   const charsetPreset = useAppStore((s) => s.settings.charsetPreset);
   const hasCharsetOptions = charsetPreset === 'custom' || charsetPreset === 'word';
 
-  const defaultSections = ['input', 'rendering', 'resolution', 'characters', 'color', 'export'];
+  const defaultSections = ['input', 'crop', 'rendering', 'resolution', 'characters', 'color', 'export'];
   if (sourceInfo?.type === 'video') {
     defaultSections.push('video');
   }
@@ -60,6 +61,9 @@ export function Sidebar() {
         <Accordion.Root type="multiple" defaultValue={defaultSections}>
           <Section value="input" title="Input">
             <InputControls />
+          </Section>
+          <Section value="crop" title="Crop">
+            <CropControls />
           </Section>
           <Section value="rendering" title="Rendering">
             <RenderSettings />

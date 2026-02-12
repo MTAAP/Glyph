@@ -1,4 +1,4 @@
-import type { CharacterGrid, CharacterCell, RenderSettings } from '@/shared/types';
+import type { CharacterGrid, CharacterCell, RenderSettings, CycleDirection } from '@/shared/types';
 import { contrastingColor } from '@/shared/utils/color';
 import type { SampleResult } from './sampler';
 import { computeLuminanceGrid, mapLuminanceToChars } from './luminance';
@@ -46,6 +46,43 @@ export function mapToCharacters(
   return buildCharsetGrid(samples, settings, charset);
 }
 
+/**
+ * Returns visible cell coordinates in the specified traversal order.
+ */
+function getDirectionalCoords(
+  visibleGrid: boolean[][],
+  rows: number,
+  cols: number,
+  direction: CycleDirection,
+): [number, number][] {
+  const coords: [number, number][] = [];
+
+  switch (direction) {
+    case 'rtl':
+      for (let y = 0; y < rows; y++)
+        for (let x = cols - 1; x >= 0; x--)
+          if (visibleGrid[y][x]) coords.push([y, x]);
+      break;
+    case 'ttb':
+      for (let x = 0; x < cols; x++)
+        for (let y = 0; y < rows; y++)
+          if (visibleGrid[y][x]) coords.push([y, x]);
+      break;
+    case 'reverse':
+      for (let y = rows - 1; y >= 0; y--)
+        for (let x = cols - 1; x >= 0; x--)
+          if (visibleGrid[y][x]) coords.push([y, x]);
+      break;
+    default: // 'ltr'
+      for (let y = 0; y < rows; y++)
+        for (let x = 0; x < cols; x++)
+          if (visibleGrid[y][x]) coords.push([y, x]);
+      break;
+  }
+
+  return coords;
+}
+
 function buildWordCycleGrid(
   samples: SampleResult,
   settings: RenderSettings,
@@ -56,28 +93,34 @@ function buildWordCycleGrid(
   const word = charset.length > 0 ? charset : ' ';
   const grid: CharacterGrid = new Array(rows);
 
+  // Pass 1: compute visibility + initialize all cells as spaces
+  const visibleGrid: boolean[][] = new Array(rows);
   for (let y = 0; y < rows; y++) {
     const row = new Array<CharacterCell>(cols);
+    visibleGrid[y] = new Array<boolean>(cols);
 
     for (let x = 0; x < cols; x++) {
       const lum = luminanceGrid[y][x];
-      const visible = settings.invertRamp
+      visibleGrid[y][x] = settings.invertRamp
         ? lum <= settings.wordThreshold
         : lum > settings.wordThreshold;
 
-      const charIndex = (y * cols + x) % word.length;
-      const char = visible ? word[charIndex] : ' ';
-      const cell: CharacterCell = { char };
-
+      const cell: CharacterCell = { char: ' ' };
       if (settings.colorMode !== 'mono') {
         const sample = samples.samples[y][x];
         applyColor(cell, sample.r, sample.g, sample.b, settings.colorMode);
       }
-
       row[x] = cell;
     }
 
     grid[y] = row;
+  }
+
+  // Pass 2: assign characters sequentially to visible cells in traversal order
+  const coords = getDirectionalCoords(visibleGrid, rows, cols, settings.cycleDirection);
+  for (let i = 0; i < coords.length; i++) {
+    const [y, x] = coords[i];
+    grid[y][x].char = word[i % word.length];
   }
 
   return grid;

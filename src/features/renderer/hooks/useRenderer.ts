@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import type { WorkerMessage } from '../worker/protocol';
 import type { RenderSettings } from '@/shared/types';
+import type { CropRect } from '@/features/crop/types';
 import { sampleGrid } from '../engine/sampler';
 import { applyAdjustments } from '../engine/adjustments';
 import { mapToCharacters } from '../engine/mapper';
@@ -24,7 +25,21 @@ function extractImageData(
   source: HTMLImageElement | HTMLVideoElement,
   sourceWidth: number,
   sourceHeight: number,
+  cropRect?: CropRect | null,
 ): ImageData {
+  if (cropRect) {
+    const sx = Math.round(cropRect.x * sourceWidth);
+    const sy = Math.round(cropRect.y * sourceHeight);
+    const sw = Math.round(cropRect.width * sourceWidth);
+    const sh = Math.round(cropRect.height * sourceHeight);
+    const canvas = document.createElement('canvas');
+    canvas.width = sw;
+    canvas.height = sh;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(source, sx, sy, sw, sh, 0, 0, sw, sh);
+    return ctx.getImageData(0, 0, sw, sh);
+  }
+
   const canvas = document.createElement('canvas');
   canvas.width = sourceWidth;
   canvas.height = sourceHeight;
@@ -137,17 +152,16 @@ export function useRenderer(): void {
 
   useEffect(() => {
     const dispatch = () => {
-      const { sourceImage: img, sourceVideo: vid, sourceInfo: info, settings: s } =
-        useAppStore.getState();
+      const state = useAppStore.getState();
+      const { sourceImage: img, sourceVideo: vid, sourceInfo: info, settings: s } = state;
       const src = img ?? vid;
       if (!src || !info) return;
 
-      const sourceWidth = info.width;
-      const sourceHeight = info.height;
+      const activeCrop = state.cropRect;
 
       let imageData: ImageData;
       try {
-        imageData = extractImageData(src, sourceWidth, sourceHeight);
+        imageData = extractImageData(src, info.width, info.height, activeCrop);
       } catch {
         useAppStore.getState().addToast({
           type: 'error',
@@ -155,6 +169,9 @@ export function useRenderer(): void {
         });
         return;
       }
+
+      const effectiveWidth = imageData.width;
+      const effectiveHeight = imageData.height;
 
       useAppStore.getState().setIsRendering(true);
 
@@ -167,14 +184,14 @@ export function useRenderer(): void {
             width: s.outputWidth,
             height: 0,
             settings: s,
-            sourceWidth,
-            sourceHeight,
+            sourceWidth: effectiveWidth,
+            sourceHeight: effectiveHeight,
           },
           [buffer],
         );
       } else {
         try {
-          renderOnMainThread(imageData, s, sourceWidth, sourceHeight);
+          renderOnMainThread(imageData, s, effectiveWidth, effectiveHeight);
         } catch (err) {
           useAppStore.getState().addToast({
             type: 'error',
@@ -194,15 +211,16 @@ export function useRenderer(): void {
         state.sourceImage !== prev.sourceImage ||
         state.sourceVideo !== prev.sourceVideo;
       const frameChanged = state.currentFrame !== prev.currentFrame;
+      const cropChanged = state.cropRect !== prev.cropRect;
 
-      if (!settingsChanged && !sourceChanged && !frameChanged) return;
+      if (!settingsChanged && !sourceChanged && !frameChanged && !cropChanged) return;
 
       const source = state.sourceImage ?? state.sourceVideo;
       if (!source || !state.sourceInfo) return;
 
       clearTimeout(debounceTimerRef.current);
 
-      if (settingsChanged && !sourceChanged) {
+      if ((settingsChanged || cropChanged) && !sourceChanged) {
         pendingRenderRef.current = true;
         debounceTimerRef.current = setTimeout(() => {
           pendingRenderRef.current = false;

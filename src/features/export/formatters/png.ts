@@ -5,6 +5,8 @@ interface PngOptions {
   fontFamily?: string;
   background?: string | 'transparent';
   padding?: number;
+  cellSpacingX?: number;
+  cellSpacingY?: number;
 }
 
 export function formatPng(
@@ -15,6 +17,8 @@ export function formatPng(
   const fontFamily = options.fontFamily ?? 'monospace';
   const background = options.background ?? '#1a1a1a';
   const padding = options.padding ?? 10;
+  const spX = options.cellSpacingX ?? 1.0;
+  const spY = options.cellSpacingY ?? 1.0;
 
   const rows = grid.length;
   const cols = rows > 0 ? grid[0].length : 0;
@@ -27,9 +31,11 @@ export function formatPng(
   const metrics = ctx.measureText('M');
   const charWidth = metrics.width;
   const lineHeight = fontSize * 1.2;
+  const cellPitchX = charWidth * spX;
+  const cellPitchY = lineHeight * spY;
 
-  canvas.width = Math.ceil(cols * charWidth + 2 * padding);
-  canvas.height = Math.ceil(rows * lineHeight + 2 * padding);
+  canvas.width = Math.ceil(cols * cellPitchX + 2 * padding);
+  canvas.height = Math.ceil(rows * cellPitchY + 2 * padding);
 
   // Reset font after resize (canvas resize clears state)
   ctx.font = font;
@@ -42,15 +48,15 @@ export function formatPng(
 
   for (let r = 0; r < rows; r++) {
     const row = grid[r];
-    const y = padding + r * lineHeight;
+    const y = padding + r * cellPitchY;
 
     for (let c = 0; c < row.length; c++) {
       const cell = row[c];
-      const x = padding + c * charWidth;
+      const x = padding + c * cellPitchX;
 
       if (cell.bg) {
         ctx.fillStyle = `rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`;
-        ctx.fillRect(x, y, charWidth, lineHeight);
+        ctx.fillRect(x, y, cellPitchX, cellPitchY);
       }
 
       if (cell.fg) {
@@ -82,7 +88,12 @@ export function renderGridToCanvas(
   lineHeight: number,
   padding: number,
   background: string | 'transparent',
+  cellSpacingX = 1.0,
+  cellSpacingY = 1.0,
 ): void {
+  const cellPitchX = charWidth * cellSpacingX;
+  const cellPitchY = lineHeight * cellSpacingY;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (background !== 'transparent') {
@@ -93,14 +104,14 @@ export function renderGridToCanvas(
   const rows = grid.length;
   for (let r = 0; r < rows; r++) {
     const row = grid[r];
-    const y = padding + r * lineHeight;
+    const y = padding + r * cellPitchY;
     for (let c = 0; c < row.length; c++) {
       const cell = row[c];
-      const x = padding + c * charWidth;
+      const x = padding + c * cellPitchX;
 
       if (cell.bg) {
         ctx.fillStyle = `rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`;
-        ctx.fillRect(x, y, charWidth, lineHeight);
+        ctx.fillRect(x, y, cellPitchX, cellPitchY);
       }
 
       if (cell.fg) {
