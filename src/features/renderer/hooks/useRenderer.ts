@@ -3,6 +3,7 @@ import { useAppStore } from '@/features/settings/store';
 import type { WorkerMessage } from '../worker/protocol';
 import type { RenderSettings } from '@/shared/types';
 import { sampleGrid } from '../engine/sampler';
+import { applyAdjustments } from '../engine/adjustments';
 import { mapToCharacters } from '../engine/mapper';
 import { getActiveCharset } from '@/features/settings/presets';
 
@@ -42,13 +43,15 @@ function renderOnMainThread(
   const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const data = imageData.data;
 
-  const samples = sampleGrid(
+  const rawSamples = sampleGrid(
     data,
     sourceWidth,
     sourceHeight,
     settings.outputWidth,
     settings.aspectRatioCorrection,
   );
+
+  const samples = applyAdjustments(rawSamples, settings.brightness, settings.contrast);
 
   const grid = mapToCharacters(
     samples,

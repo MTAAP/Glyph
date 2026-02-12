@@ -14,6 +14,9 @@ export function InputControls() {
   const setSource = useAppStore((s) => s.setSource);
   const setSourceCanvas = useAppStore((s) => s.setSourceCanvas);
   const setRenderResult = useAppStore((s) => s.setRenderResult);
+  const setIsPlaying = useAppStore((s) => s.setIsPlaying);
+  const setCurrentFrame = useAppStore((s) => s.setCurrentFrame);
+  const setTotalFrames = useAppStore((s) => s.setTotalFrames);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -48,10 +51,13 @@ export function InputControls() {
 
   const clearSource = useCallback(() => {
     revokeActiveBlobUrl();
+    setIsPlaying(false);
     setSource(null, null, null);
     setSourceCanvas(null);
     setRenderResult(null);
-  }, [setSource, setSourceCanvas, setRenderResult]);
+    setCurrentFrame(0);
+    setTotalFrames(0);
+  }, [setSource, setSourceCanvas, setRenderResult, setIsPlaying, setCurrentFrame, setTotalFrames]);
 
   return (
     <div className="space-y-2">
