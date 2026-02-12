@@ -56,7 +56,7 @@ export function URLInput() {
         onClick={fetchUrl}
         disabled={loading || !url.trim()}
         className={cn(
-          'px-3 py-2 rounded-md text-sm font-medium shrink-0',
+          'w-20 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium shrink-0',
           'bg-primary text-primary-foreground',
           'hover:opacity-90 transition-opacity',
           'disabled:opacity-50 disabled:cursor-not-allowed',

@@ -1,15 +1,32 @@
 import { useAppStore } from '@/features/settings/store';
 import type { SourceInfo } from '@/shared/types';
 
-const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
-const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
+export const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
+export const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
+export const ACCEPTED_FILE_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES];
+
+let activeBlobUrl: string | null = null;
+
+/** Revoke any previously created blob URL to prevent memory leaks. */
+export function revokeActiveBlobUrl(): void {
+  if (activeBlobUrl) {
+    URL.revokeObjectURL(activeBlobUrl);
+    activeBlobUrl = null;
+  }
+}
+
+function trackBlobUrl(url: string): string {
+  revokeActiveBlobUrl();
+  activeBlobUrl = url;
+  return url;
+}
 
 export async function processFile(file: File): Promise<void> {
   const store = useAppStore.getState();
 
-  if (IMAGE_TYPES.includes(file.type)) {
+  if (ACCEPTED_IMAGE_TYPES.includes(file.type)) {
     const img = new Image();
-    const url = URL.createObjectURL(file);
+    const url = trackBlobUrl(URL.createObjectURL(file));
 
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
@@ -26,9 +43,9 @@ export async function processFile(file: File): Promise<void> {
     };
 
     store.setSource(img, null, info);
-  } else if (VIDEO_TYPES.includes(file.type)) {
+  } else if (ACCEPTED_VIDEO_TYPES.includes(file.type)) {
     const video = document.createElement('video');
-    const url = URL.createObjectURL(file);
+    const url = trackBlobUrl(URL.createObjectURL(file));
     video.preload = 'auto';
 
     await new Promise<void>((resolve, reject) => {

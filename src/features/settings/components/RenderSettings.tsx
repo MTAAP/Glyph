@@ -86,6 +86,20 @@ export function RenderSettings() {
 
   return (
     <div className="space-y-3">
+      <SettingSlider
+        label="Brightness"
+        value={settings.brightness}
+        onValueChange={(v) => updateSettings({ brightness: v })}
+        min={-100}
+        max={100}
+      />
+      <SettingSlider
+        label="Contrast"
+        value={settings.contrast}
+        onValueChange={(v) => updateSettings({ contrast: v })}
+        min={-100}
+        max={100}
+      />
       {showFullControls && (
         <>
           <SettingSwitch

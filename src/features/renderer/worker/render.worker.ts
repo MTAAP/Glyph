@@ -1,6 +1,7 @@
 import type { WorkerRequest } from '../../../shared/types';
 import type { WorkerError } from './protocol';
 import { sampleGrid } from '../engine/sampler';
+import { applyAdjustments } from '../engine/adjustments';
 import { mapToCharacters } from '../engine/mapper';
 import { getActiveCharset } from '../../settings/presets';
 
@@ -17,13 +18,15 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
 
     const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
 
-    const samples = sampleGrid(
+    const rawSamples = sampleGrid(
       imageData,
       sourceWidth,
       sourceHeight,
       width,
       settings.aspectRatioCorrection,
     );
+
+    const samples = applyAdjustments(rawSamples, settings.brightness, settings.contrast);
 
     const grid = mapToCharacters(
       samples,

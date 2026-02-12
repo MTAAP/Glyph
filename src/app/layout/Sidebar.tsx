@@ -8,7 +8,7 @@ import { CharsetPicker } from '@/features/settings/components/CharsetPicker';
 import { ColorControls } from '@/features/settings/components/ColorControls';
 import { VideoControls } from '@/features/settings/components/VideoControls';
 import { ExportBar } from '@/features/export/components/ExportBar';
-import { URLInput } from '@/features/input/components/URLInput';
+import { InputControls } from '@/features/input/components/InputControls';
 import { cn } from '@/shared/utils/cn';
 
 function Section({
@@ -59,7 +59,7 @@ export function Sidebar() {
         </div>
         <Accordion.Root type="multiple" defaultValue={defaultSections}>
           <Section value="input" title="Input">
-            <URLInput />
+            <InputControls />
           </Section>
           <Section value="rendering" title="Rendering">
             <RenderSettings />
