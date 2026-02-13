@@ -13,6 +13,7 @@ interface NavigableSliderProps {
   max: number;
   step?: number;
   formatValue?: (value: number) => string;
+  hideLabel?: boolean;
 }
 
 export function NavigableSlider({
@@ -23,6 +24,7 @@ export function NavigableSlider({
   max,
   step = 1,
   formatValue = (v) => String(v),
+  hideLabel = false,
 }: NavigableSliderProps) {
   const id = useId();
   const ref = useRef<HTMLSpanElement>(null);
@@ -72,10 +74,12 @@ export function NavigableSlider({
 
   return (
     <div className={cn('space-y-1.5 border border-transparent', isFocused && 'border-accent')}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs">{label}</span>
-        <span className="text-xs text-muted-foreground tabular-nums">{formatValue(value)}</span>
-      </div>
+      {!hideLabel && (
+        <div className="flex items-center justify-between">
+          <span className="text-xs">{label}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{formatValue(value)}</span>
+        </div>
+      )}
       <Slider.Root
         value={[value]}
         onValueChange={([v]) => onValueChange(v)}

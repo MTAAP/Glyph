@@ -62,6 +62,7 @@ export function ResolutionControls() {
                 <Link className="w-3.5 h-3.5" />
               </button>
             </div>
+            <span className="text-xs text-muted-foreground tabular-nums">{Math.round(cellSpacingX * 100)}%</span>
           </div>
           <NavigableSlider
             label="Cell Spacing"
@@ -71,6 +72,7 @@ export function ResolutionControls() {
             max={3.0}
             step={0.05}
             formatValue={(v) => `${Math.round(v * 100)}%`}
+            hideLabel
           />
         </div>
       ) : (
