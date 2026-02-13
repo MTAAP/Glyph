@@ -35,7 +35,7 @@ export function Canvas() {
       <div className="flex-1 overflow-auto flex items-center justify-center p-4 relative">
         {!hasSource && (
           <div className="flex flex-col items-center gap-3 text-muted-foreground text-xs uppercase tracking-wide">
-            <div className="text-2xl">[ ]</div>
+            <div className="text-2xl">[↑]</div>
             <p>Drop image or video to begin</p>
             <p className="text-xs normal-case tracking-normal">or use sidebar controls</p>
           </div>

@@ -14,13 +14,14 @@ import { cn } from '@/shared/utils/cn.ts';
 import type { ExportOptions } from '@/shared/types/index.ts';
 import { useExport } from '../hooks/useExport.ts';
 import { FormatOptions } from './FormatOptions.tsx';
+import { NavigableButton } from '@/shared/ui/NavigableButton.tsx';
 
 type Format = ExportOptions['format'];
 
 const FORMAT_BUTTONS: {
   format: Format;
   label: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   videoOnly?: boolean;
   animatedOnly?: boolean;
   copyable?: boolean;
@@ -70,7 +71,7 @@ export function ExportBar() {
       <div className="flex items-center gap-1 flex-wrap">
         {visibleFormats.map(({ format, label, copyable }) => (
           <div key={format} className="flex items-center">
-            <button
+            <NavigableButton
               onClick={() => handleExport(format)}
               disabled={disabled}
               className={cn(
@@ -84,9 +85,9 @@ export function ExportBar() {
               title={`Export as ${label}`}
             >
               {label}
-            </button>
+            </NavigableButton>
             {copyable && (
-              <button
+              <NavigableButton
                 onClick={() =>
                   handleCopy(format as 'txt' | 'ansi' | 'html')
                 }
@@ -99,7 +100,7 @@ export function ExportBar() {
                 title={`Copy ${label} to clipboard`}
               >
                 [C]
-              </button>
+              </NavigableButton>
             )}
           </div>
         ))}

@@ -17,7 +17,8 @@ export type NavigableControlType =
   | 'number'
   | 'text'
   | 'color'
-  | 'segmented';
+  | 'segmented'
+  | 'radio';
 
 export interface NavigableControl {
   id: string;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useId } from 'react';
 import { useSidebarNavigationOptional } from '@/features/settings/context/SidebarNavigationContext';
 import { useAppStore } from '@/features/settings/store';
+import { useFocusVisible } from '@/shared/hooks/useFocusVisible';
 import { cn } from '@/shared/utils/cn';
 import type { LoopMode } from '@/shared/types';
 
@@ -15,6 +16,7 @@ export function NavigableLoopMode({ value, onValueChange }: NavigableLoopModePro
   const nav = useSidebarNavigationOptional();
   const focusedIndex = useAppStore((s) => s.sidebarFocusIndex);
   const setSidebarFocusIndex = useAppStore((s) => s.setSidebarFocusIndex);
+  const isKeyboardFocus = useFocusVisible();
 
   const modes: LoopMode[] = ['loop', 'pingpong', 'once'];
 
@@ -43,7 +45,7 @@ export function NavigableLoopMode({ value, onValueChange }: NavigableLoopModePro
 
   const controls = nav?.getControls() ?? [];
   const myIndex = controls.findIndex((c) => c.id === id);
-  const isFocused = focusedIndex !== null && myIndex === focusedIndex;
+  const isFocused = focusedIndex !== null && myIndex === focusedIndex && isKeyboardFocus;
 
   const handleFocus = () => {
     if (myIndex !== -1) {

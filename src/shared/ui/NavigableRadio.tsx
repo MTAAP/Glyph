@@ -4,22 +4,26 @@ import { useAppStore } from '@/features/settings/store';
 import { useFocusVisible } from '@/shared/hooks/useFocusVisible';
 import { cn } from '@/shared/utils/cn';
 
-interface SegmentOption<T extends string> {
+interface RadioOption<T extends string> {
   value: T;
   label: string;
 }
 
-interface NavigableSegmentedProps<T extends string> {
+interface NavigableRadioProps<T extends string> {
+  name: string;
   value: T;
   onValueChange: (value: T) => void;
-  options: SegmentOption<T>[];
+  options: RadioOption<T>[];
+  disabled?: boolean;
 }
 
-export function NavigableSegmented<T extends string>({
+export function NavigableRadio<T extends string>({
+  name,
   value,
   onValueChange,
   options,
-}: NavigableSegmentedProps<T>) {
+  disabled = false,
+}: NavigableRadioProps<T>) {
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
   const nav = useSidebarNavigationOptional();
@@ -32,7 +36,7 @@ export function NavigableSegmented<T extends string>({
 
     const unregister = nav.register({
       id,
-      type: 'segmented',
+      type: 'radio',
       ref: ref as React.RefObject<HTMLElement>,
       getValue: () => value,
       setValue: (delta) => {
@@ -50,12 +54,10 @@ export function NavigableSegmented<T extends string>({
     return unregister;
   }, [nav, id, value, onValueChange, options]);
 
-  // Determine if this control is focused
   const controls = nav?.getControls() ?? [];
   const myIndex = controls.findIndex((c) => c.id === id);
   const isFocused = focusedIndex !== null && myIndex === focusedIndex && isKeyboardFocus;
 
-  // Update focus index when this element receives focus via click
   const handleFocus = () => {
     if (myIndex !== -1) {
       setSidebarFocusIndex(myIndex);
@@ -68,25 +70,25 @@ export function NavigableSegmented<T extends string>({
       tabIndex={0}
       onFocus={handleFocus}
       className={cn(
-        'flex border-2 border-border focus:outline-none',
+        'flex flex-wrap gap-3 focus:outline-none border border-transparent',
         isFocused && 'border-accent'
       )}
     >
-      {options.map((option, i) => (
-        <button
+      {options.map((option) => (
+        <label
           key={option.value}
-          onClick={() => onValueChange(option.value)}
-          tabIndex={-1}
-          className={cn(
-            'flex-1 px-2 py-1.5 text-xs',
-            i > 0 && 'border-l border-border',
-            value === option.value
-              ? 'bg-accent/20 text-accent'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
+          className={cn('flex items-center gap-1.5 text-xs', disabled && 'opacity-50')}
         >
-          {option.label}
-        </button>
+          <input
+            type="radio"
+            name={name}
+            checked={value === option.value}
+            onChange={() => onValueChange(option.value)}
+            disabled={disabled}
+            className="accent-primary"
+          />
+          <span>{option.label}</span>
+        </label>
       ))}
     </div>
   );
