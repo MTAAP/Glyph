@@ -49,7 +49,7 @@ export interface RenderResult {
 }
 
 export interface ExportOptions {
-  format: 'txt' | 'ansi' | 'html' | 'png' | 'gif' | 'webm' | 'frames';
+  format: 'txt' | 'ansi' | 'html' | 'png' | 'gif' | 'webm' | 'frames' | 'animated-html';
   ansiColorDepth?: 8 | 16 | 256 | 'truecolor';
   htmlFontSize?: number;
   htmlFontFamily?: string;
@@ -90,4 +90,20 @@ export interface WorkerResponse {
   width: number;
   height: number;
   renderTimeMs: number;
+}
+
+export type LoopMode = 'loop' | 'pingpong' | 'once';
+
+export interface ActiveEffect {
+  key: string;
+  params: Record<string, number>;
+}
+
+export interface AnimationSettings {
+  enabled: boolean;
+  effects: ActiveEffect[];     // Pipeline order
+  fps: number;                 // 10-60, default 24
+  cycleDuration: number;       // 0.5-10s, default 3
+  loopMode: LoopMode;
+  presetKey: string;           // 'none' | preset key | 'custom'
 }

@@ -7,6 +7,7 @@ import {
   Video,
   Archive,
   ClipboardCopy,
+  Play,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAppStore } from '@/features/settings/store.ts';
@@ -22,15 +23,17 @@ const FORMAT_BUTTONS: {
   label: string;
   icon: typeof FileText;
   videoOnly?: boolean;
+  animatedOnly?: boolean;
   copyable?: boolean;
 }[] = [
   { format: 'txt', label: 'TXT', icon: FileText, copyable: true },
   { format: 'ansi', label: 'ANSI', icon: Terminal, copyable: true },
   { format: 'html', label: 'HTML', icon: Code, copyable: true },
   { format: 'png', label: 'PNG', icon: Image },
-  { format: 'gif', label: 'GIF', icon: Film, videoOnly: true },
-  { format: 'webm', label: 'WebM', icon: Video, videoOnly: true },
+  { format: 'gif', label: 'GIF', icon: Film, animatedOnly: true },
+  { format: 'webm', label: 'WebM', icon: Video, animatedOnly: true },
   { format: 'frames', label: 'Frames', icon: Archive, videoOnly: true },
+  { format: 'animated-html', label: 'Animated HTML', icon: Play, animatedOnly: true },
 ];
 
 export function ExportBar() {
@@ -43,6 +46,9 @@ export function ExportBar() {
   const { exportAs, copyToClipboard, isExporting, progress } = useExport();
 
   const isVideo = sourceInfo?.type === 'video';
+  const animationEnabled = useAppStore(
+    (s) => s.animation.enabled && s.animation.effects.length > 0,
+  );
   const disabled = !renderResult || isExporting;
 
   const handleExport = (format: Format) => {
@@ -54,9 +60,11 @@ export function ExportBar() {
     copyToClipboard(format, formatOptions);
   };
 
-  const visibleFormats = FORMAT_BUTTONS.filter(
-    (f) => !f.videoOnly || isVideo,
-  );
+  const visibleFormats = FORMAT_BUTTONS.filter((f) => {
+    if (f.videoOnly) return isVideo;
+    if (f.animatedOnly) return isVideo || animationEnabled;
+    return true;
+  });
 
   return (
     <div className="flex flex-col gap-2">
