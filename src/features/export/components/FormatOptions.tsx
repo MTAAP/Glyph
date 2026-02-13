@@ -17,7 +17,7 @@ function LabeledInput({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="flex items-center gap-2 text-xs">
       <span className="text-muted-foreground w-24 shrink-0">{label}</span>
       {children}
     </label>
@@ -32,20 +32,20 @@ export function FormatOptions({
   if (!selectedFormat) return null;
 
   const inputClass = cn(
-    'px-2 py-1 rounded-md border bg-background text-sm',
-    'focus:outline-none focus:ring-1 focus:ring-ring',
+    'px-2 py-1 border bg-background text-xs',
+    'focus:outline-none',
   );
 
   switch (selectedFormat) {
     case 'ansi':
       return (
-        <div className="flex flex-col gap-2 p-3 rounded-lg border bg-card">
+        <div className="flex flex-col gap-2 p-3 border bg-card">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             ANSI Options
           </span>
           <fieldset className="flex flex-wrap gap-3">
             {([8, 16, 256, 'truecolor'] as const).map((depth) => (
-              <label key={depth} className="flex items-center gap-1.5 text-sm">
+              <label key={depth} className="flex items-center gap-1.5 text-xs">
                 <input
                   type="radio"
                   name="ansi-depth"

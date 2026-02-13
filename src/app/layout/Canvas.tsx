@@ -1,5 +1,4 @@
 import { useRef } from 'react';
-import { Upload } from 'lucide-react';
 import { useAppStore } from '@/features/settings/store';
 import { DragDrop } from '@/features/input/components/DragDrop';
 import { TextPreview } from '@/features/preview/components/TextPreview';
@@ -35,9 +34,10 @@ export function Canvas() {
       {/* Preview area */}
       <div className="flex-1 overflow-auto flex items-center justify-center p-4 relative">
         {!hasSource && (
-          <div className="flex flex-col items-center gap-3 text-muted-foreground">
-            <Upload className="w-10 h-10" />
-            <p className="text-sm">Drop an image or video here to get started</p>
+          <div className="flex flex-col items-center gap-3 text-muted-foreground text-xs uppercase tracking-wide">
+            <div className="text-2xl">[ ]</div>
+            <p>Drop image or video to begin</p>
+            <p className="text-xs normal-case tracking-normal">or use sidebar controls</p>
           </div>
         )}
 

@@ -1,5 +1,4 @@
 import * as Accordion from '@radix-ui/react-accordion';
-import { ChevronDown } from 'lucide-react';
 import { useAppStore } from '@/features/settings/store';
 import { RenderSettings } from '@/features/settings/components/RenderSettings';
 import { ResolutionControls } from '@/features/settings/components/ResolutionControls';
@@ -23,20 +22,22 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <Accordion.Item value={value} className="border-b last:border-b-0">
+    <Accordion.Item value={value} className="border-b border-border last:border-b-0">
       <Accordion.Header>
         <Accordion.Trigger
           className={cn(
-            'flex w-full items-center justify-between py-2.5 text-sm font-medium',
-            'hover:text-foreground transition-colors',
-            '[&[data-state=open]>svg]:rotate-180',
+            'group flex w-full items-center justify-between py-2.5 text-xs font-medium uppercase tracking-wide',
+            'text-muted-foreground hover:text-accent',
           )}
         >
-          {title}
-          <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200" />
+          <span>{title}</span>
+          <span className="text-muted-foreground normal-case">
+            <span className="group-data-[state=open]:hidden">[&gt;]</span>
+            <span className="group-data-[state=closed]:hidden">[v]</span>
+          </span>
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Content className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+      <Accordion.Content className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up px-1">
         <div className="pb-3">{children}</div>
       </Accordion.Content>
     </Accordion.Item>
@@ -54,9 +55,9 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-[280px] max-lg:w-full border-r max-lg:border-r-0 max-lg:border-b overflow-y-auto shrink-0">
+    <aside className="w-[280px] max-lg:w-full border-r max-lg:border-r-0 max-lg:border-b overflow-y-auto shrink-0 bg-card">
       <div className="px-4 py-2">
-        <div className="pb-2">
+        <div className="pb-2 border-b border-border mb-2">
           <PresetSelector />
         </div>
         <Accordion.Root type="multiple" defaultValue={defaultSections}>

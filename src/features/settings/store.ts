@@ -40,6 +40,10 @@ interface AppState {
   // UI state
   theme: 'light' | 'dark' | 'system';
   toasts: Toast[];
+  sidebarFocusIndex: number | null;
+  formatModalOpen: boolean;
+  formatModalMode: 'copy' | 'export';
+  triggerFilePicker: number;
 
   // Actions
   setSource: (image: HTMLImageElement | null, video: HTMLVideoElement | null, info: SourceInfo | null) => void;
@@ -68,6 +72,13 @@ interface AppState {
   updateEffectParams: (index: number, params: Record<string, number>) => void;
   reorderEffects: (fromIndex: number, toIndex: number) => void;
   applyAnimationPreset: (presetKey: string) => void;
+  setSidebarFocusIndex: (index: number | null) => void;
+
+  // Format modal actions
+  setFormatModalOpen: (open: boolean, mode?: 'copy' | 'export') => void;
+
+  // File picker action
+  openFilePicker: () => void;
 }
 
 export interface Toast {
@@ -149,6 +160,10 @@ export const useAppStore = create<AppState>((set) => ({
 
   theme: 'system',
   toasts: [],
+  sidebarFocusIndex: null,
+  formatModalOpen: false,
+  formatModalMode: 'copy',
+  triggerFilePicker: 0,
 
   setSource: (image, video, info) => set({
     sourceImage: image,
@@ -293,4 +308,10 @@ export const useAppStore = create<AppState>((set) => ({
       }
       return updates;
     }),
+  setSidebarFocusIndex: (sidebarFocusIndex) => set({ sidebarFocusIndex }),
+  setFormatModalOpen: (open, mode) => set((state) => ({
+    formatModalOpen: open,
+    formatModalMode: mode ?? state.formatModalMode,
+  })),
+  openFilePicker: () => set((state) => ({ triggerFilePicker: (state.triggerFilePicker ?? 0) + 1 })),
 }));

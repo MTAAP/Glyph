@@ -31,19 +31,21 @@ export function CropControls() {
     <div className="space-y-3">
       {/* Enable toggle */}
       <label className="flex items-center justify-between gap-2">
-        <span className="text-sm">Activate Crop Tool</span>
+        <span className="text-xs">Activate Crop Tool</span>
         <Switch.Root
           checked={cropEnabled}
           onCheckedChange={setCropEnabled}
           className={cn(
-            'w-9 h-5 rounded-full relative transition-colors',
-            'bg-input data-[state=checked]:bg-primary',
+            'w-10 h-5 border border-border bg-transparent relative',
+            'data-[state=checked]:bg-accent/20 data-[state=checked]:border-accent',
+            'flex items-center px-0.5',
+            'focus:outline-none'
           )}
         >
           <Switch.Thumb
             className={cn(
-              'block w-4 h-4 rounded-full bg-background transition-transform',
-              'translate-x-0.5 data-[state=checked]:translate-x-[18px]',
+              'block w-4 h-3.5 bg-muted-foreground',
+              'data-[state=checked]:bg-accent data-[state=checked]:translate-x-[18px]'
             )}
           />
         </Switch.Root>
@@ -53,16 +55,16 @@ export function CropControls() {
         <>
           {/* Aspect ratio select */}
           <div className="space-y-1.5">
-            <span className="text-sm">Aspect Ratio</span>
+            <span className="text-xs">Aspect Ratio</span>
             <Select.Root
               value={cropAspectRatio}
               onValueChange={(v) => setCropAspectRatio(v as AspectRatioPreset)}
             >
               <Select.Trigger
                 className={cn(
-                  'w-full flex items-center justify-between px-3 py-2 rounded-md text-sm',
+                  'w-full flex items-center justify-between px-3 py-2 text-xs',
                   'bg-secondary border border-input hover:bg-accent transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-ring',
+                  'focus:outline-none',
                 )}
               >
                 <Select.Value />
@@ -72,7 +74,7 @@ export function CropControls() {
               </Select.Trigger>
               <Select.Portal>
                 <Select.Content
-                  className="bg-popover border rounded-lg shadow-lg overflow-hidden z-50"
+                  className="bg-popover border shadow-lg overflow-hidden z-50"
                   position="popper"
                   sideOffset={4}
                 >
@@ -82,7 +84,7 @@ export function CropControls() {
                         key={r.value}
                         value={r.value}
                         className={cn(
-                          'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm cursor-pointer',
+                          'flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer',
                           'outline-none data-[highlighted]:bg-accent',
                         )}
                       >

@@ -1,5 +1,4 @@
 import * as Slider from '@radix-ui/react-slider';
-import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
 
@@ -22,38 +21,41 @@ export function VideoTransport() {
   const currentTime = totalFrames > 0 ? (currentFrame / totalFrames) * duration : 0;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 border-t bg-background shrink-0">
+    <div className="flex items-center gap-3 px-4 py-2 border-t bg-card shrink-0">
       {/* Frame step back */}
       <button
         onClick={() => setCurrentFrame(Math.max(0, currentFrame - 1))}
         className={cn(
-          'p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+          'px-2 py-1 text-xs border border-border',
+          'text-muted-foreground hover:text-accent hover:border-accent',
         )}
         title="Previous frame"
       >
-        <SkipBack className="w-4 h-4" />
+        [&lt;]
       </button>
 
       {/* Play/Pause */}
       <button
         onClick={() => setIsPlaying(!isPlaying)}
         className={cn(
-          'p-1.5 rounded-md text-foreground hover:bg-accent transition-colors',
+          'px-2 py-1 text-xs border border-border',
+          'hover:text-accent hover:border-accent',
         )}
         title={isPlaying ? 'Pause' : 'Play'}
       >
-        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+        {isPlaying ? '[||]' : '[>]'}
       </button>
 
       {/* Frame step forward */}
       <button
         onClick={() => setCurrentFrame(Math.min(totalFrames - 1, currentFrame + 1))}
         className={cn(
-          'p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+          'px-2 py-1 text-xs border border-border',
+          'text-muted-foreground hover:text-accent hover:border-accent',
         )}
         title="Next frame"
       >
-        <SkipForward className="w-4 h-4" />
+        [&gt;]
       </button>
 
       {/* Time display */}
@@ -70,10 +72,10 @@ export function VideoTransport() {
         step={1}
         className="relative flex-1 flex items-center select-none touch-none h-5"
       >
-        <Slider.Track className="relative grow h-1 rounded-full bg-secondary">
-          <Slider.Range className="absolute h-full rounded-full bg-primary" />
+        <Slider.Track className="relative grow h-1 bg-border">
+          <Slider.Range className="absolute h-full bg-accent" />
         </Slider.Track>
-        <Slider.Thumb className="block w-3.5 h-3.5 rounded-full bg-primary shadow-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        <Slider.Thumb className="block w-3 h-3 bg-accent focus:outline-none focus:ring-1 focus:ring-accent" />
       </Slider.Root>
 
       {/* Duration */}

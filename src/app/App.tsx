@@ -2,25 +2,43 @@ import { ThemeProvider } from './theme/ThemeProvider';
 import { Header } from './layout/Header';
 import { Sidebar } from './layout/Sidebar';
 import { Canvas } from './layout/Canvas';
-import { Footer } from './layout/Footer';
+import { CommandBar } from './layout/CommandBar';
 import { ToastContainer } from '@/shared/ui/Toast';
+import { FormatModal } from '@/shared/ui/FormatModal';
 import { ClipboardHandler } from '@/features/input/components/ClipboardHandler';
 import { KeyboardHandler } from '@/features/input/components/KeyboardHandler';
+import { SidebarNavigationProvider } from '@/features/settings/context/SidebarNavigationContext';
+import { useAppStore } from '@/features/settings/store';
 
-export function App() {
+function AppContent() {
+  const formatModalOpen = useAppStore((s) => s.formatModalOpen);
+  const formatModalMode = useAppStore((s) => s.formatModalMode);
+  const setFormatModalOpen = useAppStore((s) => s.setFormatModalOpen);
+
   return (
     <ThemeProvider>
-      <ClipboardHandler />
-      <KeyboardHandler />
-      <div className="flex flex-col h-full">
-        <Header />
-        <div className="flex flex-1 min-h-0 max-lg:flex-col">
-          <Sidebar />
-          <Canvas />
+      <SidebarNavigationProvider>
+        <ClipboardHandler />
+        <KeyboardHandler />
+        <div className="flex flex-col h-full">
+          <Header />
+          <div className="flex flex-1 min-h-0 max-lg:flex-col">
+            <Sidebar />
+            <Canvas />
+          </div>
+          <CommandBar />
         </div>
-        <Footer />
-      </div>
-      <ToastContainer />
+        <ToastContainer />
+        <FormatModal
+          isOpen={formatModalOpen}
+          onClose={() => setFormatModalOpen(false)}
+          mode={formatModalMode}
+        />
+      </SidebarNavigationProvider>
     </ThemeProvider>
   );
+}
+
+export function App() {
+  return <AppContent />;
 }

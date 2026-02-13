@@ -1,41 +1,111 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { CHARSET_PRESETS } from '@/features/settings/presets';
+import { useSidebarNavigation } from '@/features/settings/context/SidebarNavigationContext';
 
 export function KeyboardHandler() {
+  const { moveUp, moveDown, adjustValue, triggerAction, focusedIndex, getControls } = useSidebarNavigation();
+
+  // Keep navigation methods in refs so event listener closure has access to current values
+  const navRef = useRef({ moveUp, moveDown, adjustValue, triggerAction, focusedIndex, getControls });
+
+  useEffect(() => {
+    navRef.current = { moveUp, moveDown, adjustValue, triggerAction, focusedIndex, getControls };
+  }, [moveUp, moveDown, adjustValue, triggerAction, focusedIndex, getControls]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore when typing in input fields
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      const inputType = (target as HTMLInputElement).type;
+      const isTextInput =
+        target.tagName === 'TEXTAREA' ||
+        (target.tagName === 'INPUT' && (inputType === 'text' || inputType === 'url' || inputType === 'number'));
+
+      // Check if a select dropdown is open
+      const isSelectOpen = !!document.querySelector('[data-radix-select-content]');
 
       const state = useAppStore.getState();
+      const isInSidebar = target.closest('aside');
+      const nav = navRef.current;
 
       switch (e.key) {
-        case ' ': {
-          e.preventDefault();
-          if (state.sourceInfo?.type === 'video') {
-            state.setIsPlaying(!state.isPlaying);
+        case 'ArrowUp': {
+          // Don't intercept when Radix select is open
+          if (isSelectOpen) return;
+
+          if (isInSidebar) {
+            e.preventDefault();
+            nav.moveUp();
+          }
+          break;
+        }
+        case 'ArrowDown': {
+          // Don't intercept when Radix select is open
+          if (isSelectOpen) return;
+
+          if (isInSidebar) {
+            e.preventDefault();
+            nav.moveDown();
           }
           break;
         }
         case 'ArrowLeft': {
-          if (state.sourceInfo?.type === 'video') {
+          // Text inputs: allow normal cursor movement
+          if (isTextInput) return;
+
+          // When in sidebar with focus, adjust value
+          if (isInSidebar && nav.focusedIndex !== null) {
+            e.preventDefault();
+            nav.adjustValue(-1);
+          } else if (state.sourceInfo?.type === 'video') {
+            // Video frame navigation (existing behavior)
             e.preventDefault();
             state.setCurrentFrame(Math.max(0, state.currentFrame - 1));
           }
           break;
         }
         case 'ArrowRight': {
-          if (state.sourceInfo?.type === 'video') {
+          // Text inputs: allow normal cursor movement
+          if (isTextInput) return;
+
+          // When in sidebar with focus, adjust value
+          if (isInSidebar && nav.focusedIndex !== null) {
+            e.preventDefault();
+            nav.adjustValue(1);
+          } else if (state.sourceInfo?.type === 'video') {
+            // Video frame navigation (existing behavior)
             e.preventDefault();
             state.setCurrentFrame(Math.min(state.totalFrames - 1, state.currentFrame + 1));
           }
           break;
         }
-        case 'i':
-        case 'I': {
-          state.updateSettings({ invertRamp: !state.settings.invertRamp });
+        case ' ': {
+          // Ignore when typing in input fields
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+          // When in sidebar with focus, trigger button action
+          if (isInSidebar && nav.focusedIndex !== null) {
+            e.preventDefault();
+            nav.triggerAction();
+          } else {
+            e.preventDefault();
+            if (state.sourceInfo?.type === 'video') {
+              state.setIsPlaying(!state.isPlaying);
+            }
+          }
+          break;
+        }
+        case 'x':
+        case 'X': {
+          // Ignore when typing in input fields
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+          state.setSource(null, null, null);
+          state.setSourceCanvas(null);
+          state.setRenderResult(null);
+          state.setIsPlaying(false);
+          state.setCurrentFrame(0);
+          state.setTotalFrames(0);
           break;
         }
         case '1':
@@ -45,11 +115,36 @@ export function KeyboardHandler() {
         case '5':
         case '6':
         case '7': {
+          // Ignore when typing in input fields
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
           const idx = parseInt(e.key, 10) - 1;
           const preset = CHARSET_PRESETS[idx];
           if (preset) {
             state.updateSettings({ charsetPreset: preset.key });
           }
+          break;
+        }
+        case 'c':
+        case 'C': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          if (state.renderResult) {
+            state.setFormatModalOpen(true, 'copy');
+          }
+          break;
+        }
+        case 'e':
+        case 'E': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          if (state.renderResult) {
+            state.setFormatModalOpen(true, 'export');
+          }
+          break;
+        }
+        case 'f':
+        case 'F': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          state.openFilePicker();
           break;
         }
       }

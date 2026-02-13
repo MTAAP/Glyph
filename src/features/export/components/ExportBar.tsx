@@ -6,7 +6,6 @@ import {
   Film,
   Video,
   Archive,
-  ClipboardCopy,
   Play,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -21,7 +20,7 @@ type Format = ExportOptions['format'];
 const FORMAT_BUTTONS: {
   format: Format;
   label: string;
-  icon: typeof FileText;
+  icon: any;
   videoOnly?: boolean;
   animatedOnly?: boolean;
   copyable?: boolean;
@@ -68,24 +67,23 @@ export function ExportBar() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {visibleFormats.map(({ format, label, icon: Icon, copyable }) => (
+      <div className="flex items-center gap-1 flex-wrap">
+        {visibleFormats.map(({ format, label, copyable }) => (
           <div key={format} className="flex items-center">
             <button
               onClick={() => handleExport(format)}
               disabled={disabled}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm',
-                'text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+                'px-2 py-1 text-xs border border-border',
+                'text-muted-foreground hover:text-accent hover:border-accent',
                 'disabled:opacity-50 disabled:pointer-events-none',
                 selectedFormat === format &&
                   isExporting &&
-                  'bg-accent text-foreground',
+                  'border-accent text-accent bg-accent/10',
               )}
               title={`Export as ${label}`}
             >
-              <Icon className="w-4 h-4" />
-              <span>{label}</span>
+              {label}
             </button>
             {copyable && (
               <button
@@ -94,13 +92,13 @@ export function ExportBar() {
                 }
                 disabled={disabled}
                 className={cn(
-                  'p-1.5 rounded-md text-muted-foreground',
-                  'hover:text-foreground hover:bg-accent transition-colors',
+                  'px-1.5 py-1 text-xs border border-l-0 border-border',
+                  'text-muted-foreground hover:text-accent hover:border-accent',
                   'disabled:opacity-50 disabled:pointer-events-none',
                 )}
                 title={`Copy ${label} to clipboard`}
               >
-                <ClipboardCopy className="w-3.5 h-3.5" />
+                [C]
               </button>
             )}
           </div>
@@ -108,9 +106,9 @@ export function ExportBar() {
       </div>
 
       {isExporting && (
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="h-1 bg-border overflow-hidden">
           <div
-            className="h-full bg-primary transition-all duration-200"
+            className="h-full bg-accent"
             style={{ width: `${progress}%` }}
           />
         </div>

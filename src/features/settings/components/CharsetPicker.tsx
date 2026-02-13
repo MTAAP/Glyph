@@ -1,6 +1,8 @@
 import { useAppStore } from '@/features/settings/store';
 import { getActiveCharset } from '@/features/settings/presets';
 import { cn } from '@/shared/utils/cn';
+import { NavigableTextInput } from '@/shared/ui/NavigableTextInput';
+import { NavigableSegmented } from '@/shared/ui/NavigableSegmented';
 import type { RenderSettings, CycleDirection } from '@/shared/types';
 
 type WordMode = RenderSettings['wordMode'];
@@ -29,43 +31,26 @@ export function CharsetPicker() {
     <div className="space-y-3">
       {isWord && (
         <>
-          <input
-            type="text"
+          <NavigableTextInput
             value={settings.wordSequence}
-            onChange={(e) => updateSettings({ wordSequence: e.target.value })}
+            onChange={(v) => updateSettings({ wordSequence: v })}
             placeholder="Enter word or phrase..."
-            className={cn(
-              'w-full px-3 py-2 rounded-md text-sm',
-              'bg-secondary border border-input',
-              'focus:outline-none focus:ring-2 focus:ring-ring',
-            )}
           />
-          <div className="flex rounded-md bg-secondary p-0.5">
-            {WORD_MODES.map((mode) => (
-              <button
-                key={mode.value}
-                onClick={() => updateSettings({ wordMode: mode.value })}
-                className={cn(
-                  'flex-1 px-2 py-1.5 text-xs font-medium rounded-sm transition-colors',
-                  settings.wordMode === mode.value
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {mode.label}
-              </button>
-            ))}
-          </div>
+          <NavigableSegmented
+            value={settings.wordMode}
+            onValueChange={(v) => updateSettings({ wordMode: v })}
+            options={WORD_MODES}
+          />
           {settings.wordMode === 'cycle' && (
-            <div className="flex rounded-md bg-secondary p-0.5">
+            <div className="flex bg-secondary p-0.5">
               {CYCLE_DIRECTIONS.map((dir) => (
                 <button
                   key={dir.value}
                   onClick={() => updateSettings({ cycleDirection: dir.value })}
                   className={cn(
-                    'flex-1 px-2 py-1.5 text-xs font-medium rounded-sm transition-colors',
+                    'flex-1 px-2 py-1.5 text-xs transition-colors',
                     settings.cycleDirection === dir.value
-                      ? 'bg-background text-foreground shadow-sm'
+                      ? 'bg-background text-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
@@ -76,30 +61,24 @@ export function CharsetPicker() {
           )}
           <p className="text-xs text-muted-foreground">
             {settings.wordMode === 'cycle'
-              ? 'Tiles the word across the grid; visibility controlled by luminance threshold.'
-              : 'Uses the word characters as a luminance ramp from light to dark.'}
+              ? 'Tiles word across grid; visibility by luminance threshold.'
+              : 'Uses word characters as luminance ramp light to dark.'}
           </p>
         </>
       )}
 
       {isCustom && (
-        <input
-          type="text"
+        <NavigableTextInput
           value={settings.customCharset}
-          onChange={(e) => updateSettings({ customCharset: e.target.value })}
+          onChange={(v) => updateSettings({ customCharset: v })}
           placeholder="Enter characters light to dark..."
-          className={cn(
-            'w-full px-3 py-2 rounded-md text-sm',
-            'bg-secondary border border-input',
-            'focus:outline-none focus:ring-2 focus:ring-ring',
-          )}
         />
       )}
 
       {/* Density preview strip */}
-      <div className="overflow-hidden rounded-md bg-secondary p-2">
+      <div className="overflow-hidden border border-border p-2">
         <div
-          className="font-mono text-xs tracking-widest text-center break-all leading-tight"
+          className="text-xs tracking-widest text-center break-all leading-tight"
           title="Character density preview"
         >
           {activeChars === 'braille' ? '\u2800\u2801\u2803\u2807\u280f\u281f\u283f\u287f\u28ff' : activeChars}
