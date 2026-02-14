@@ -147,6 +147,14 @@ export function KeyboardHandler() {
           state.openFilePicker();
           break;
         }
+        case 't':
+        case 'T': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          const themeOrder: Array<'system' | 'light' | 'dark'> = ['system', 'light', 'dark'];
+          const themeIdx = themeOrder.indexOf(state.theme);
+          state.setTheme(themeOrder[(themeIdx + 1) % themeOrder.length]);
+          break;
+        }
       }
     };
 

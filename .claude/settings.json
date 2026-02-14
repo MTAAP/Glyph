@@ -1,0 +1,29 @@
+{
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -q 'worker/' && echo \"$CLAUDE_TOOL_INPUT\" | grep -qE \"from ['\\\"]@/\"; then echo 'BLOCK: Worker files must use relative imports, not @/ aliases. See CLAUDE.md gotchas.' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx eslint --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

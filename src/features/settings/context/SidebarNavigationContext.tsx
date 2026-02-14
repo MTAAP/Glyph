@@ -66,23 +66,10 @@ export function SidebarNavigationProvider({ children }: Props) {
   const controlsRef = useRef<Map<string, NavigableControl>>(new Map());
   const orderRef = useRef<string[]>([]);
   const mountedRef = useRef(false);
+  const initialFocusDoneRef = useRef(false);
 
   const focusedIndex = useAppStore((s) => s.sidebarFocusIndex);
   const setSidebarFocusIndex = useAppStore((s) => s.setSidebarFocusIndex);
-
-  const register = useCallback((control: NavigableControl) => {
-    controlsRef.current.set(control.id, control);
-
-    // Add to order if not already present
-    if (!orderRef.current.includes(control.id)) {
-      orderRef.current.push(control.id);
-    }
-
-    return () => {
-      controlsRef.current.delete(control.id);
-      orderRef.current = orderRef.current.filter((id) => id !== control.id);
-    };
-  }, []);
 
   const getControls = useCallback((): NavigableControl[] => {
     // Return controls in DOM order by querying their positions
@@ -104,6 +91,39 @@ export function SidebarNavigationProvider({ children }: Props) {
 
     return controls;
   }, []);
+
+  const register = useCallback((control: NavigableControl) => {
+    controlsRef.current.set(control.id, control);
+
+    // Add to order if not already present
+    if (!orderRef.current.includes(control.id)) {
+      orderRef.current.push(control.id);
+    }
+
+    // Auto-focus first control when initial controls register
+    if (!initialFocusDoneRef.current) {
+      initialFocusDoneRef.current = true;
+      // Wait for all controls from the same render batch to register
+      requestAnimationFrame(() => {
+        setSidebarFocusIndex(0);
+      });
+    }
+
+    return () => {
+      // Clear focus if the unmounting control was the focused one
+      const currentFocusIndex = useAppStore.getState().sidebarFocusIndex;
+      if (currentFocusIndex !== null) {
+        const controls = getControls();
+        const focusedControl = controls[currentFocusIndex];
+        if (focusedControl?.id === control.id) {
+          setSidebarFocusIndex(null);
+        }
+      }
+
+      controlsRef.current.delete(control.id);
+      orderRef.current = orderRef.current.filter((id) => id !== control.id);
+    };
+  }, [getControls, setSidebarFocusIndex]);
 
   const moveUp = useCallback(() => {
     const controls = getControls();
@@ -182,21 +202,13 @@ export function SidebarNavigationProvider({ children }: Props) {
     [setSidebarFocusIndex]
   );
 
-  // Initialize focus on mount
+  // Track mount state for DOM focus sync
   useEffect(() => {
     mountedRef.current = true;
-    // Auto-focus the first control on mount after DOM is ready
-    const timeout = setTimeout(() => {
-      const controls = getControls();
-      if (controls.length > 0) {
-        setSidebarFocusIndex(0);
-      }
-    }, 100);
     return () => {
       mountedRef.current = false;
-      clearTimeout(timeout);
     };
-  }, [getControls, setSidebarFocusIndex]);
+  }, []);
 
   // Sync DOM focus when focusedIndex changes
   useEffect(() => {
