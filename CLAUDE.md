@@ -108,6 +108,15 @@ Tests live in `__tests__/` directories adjacent to the code they test:
 
 All tests target pure engine functions (no DOM, no React). Test files are excluded from `tsconfig.app.json` — vitest runs them separately with its own config (`vitest.config.ts` with `globals: true` and jsdom environment).
 
+## Linear Integration
+
+Project tracker: [GLYPH on Linear](https://linear.app/mtaap/project/glyph-179930d6974f) (team: MTAAP)
+
+- Keep Linear in sync with development work. When completing a task, update the corresponding issue status.
+- If your work aligns with an existing issue, reference it in commits/PRs and update its status.
+- If your work does not align with a pre-existing issue, create a new one in the GLYPH project and keep it on track throughout development.
+- Link PRs to their Linear issues when creating or updating them.
+
 ## Gotchas
 
 - `useRef` needs explicit initial value (`useRef<T>(undefined)`) with TypeScript strict mode
