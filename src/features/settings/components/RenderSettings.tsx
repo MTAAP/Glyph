@@ -1,5 +1,6 @@
 import { useAppStore } from '@/features/settings/store';
-import { SettingSwitch, SettingSlider } from '@/shared/ui/SettingControls';
+import { NavigableSlider } from '@/shared/ui/NavigableSlider';
+import { NavigableSwitch } from '@/shared/ui/NavigableSwitch';
 
 export function RenderSettings() {
   const settings = useAppStore((s) => s.settings);
@@ -11,14 +12,14 @@ export function RenderSettings() {
 
   return (
     <div className="space-y-3">
-      <SettingSlider
+      <NavigableSlider
         label="Brightness"
         value={settings.brightness}
         onValueChange={(v) => updateSettings({ brightness: v })}
         min={-100}
         max={100}
       />
-      <SettingSlider
+      <NavigableSlider
         label="Contrast"
         value={settings.contrast}
         onValueChange={(v) => updateSettings({ contrast: v })}
@@ -27,25 +28,19 @@ export function RenderSettings() {
       />
       {showFullControls && (
         <>
-          <SettingSwitch
+          <NavigableSwitch
             label="Luminance"
             checked={settings.enableLuminance}
             onCheckedChange={(v) => updateSettings({ enableLuminance: v })}
           />
-          <SettingSwitch
+          <NavigableSwitch
             label="Edge Detection"
             checked={settings.enableEdge}
             onCheckedChange={(v) => updateSettings({ enableEdge: v })}
             disabled={settings.enableDithering}
           />
-          <SettingSwitch
-            label="Dithering"
-            checked={settings.enableDithering}
-            onCheckedChange={(v) => updateSettings({ enableDithering: v })}
-            disabled={settings.enableEdge}
-          />
           {settings.enableEdge && (
-            <SettingSlider
+            <NavigableSlider
               label="Edge Threshold"
               value={settings.edgeThreshold}
               onValueChange={(v) => updateSettings({ edgeThreshold: v })}
@@ -53,8 +48,14 @@ export function RenderSettings() {
               max={255}
             />
           )}
+          <NavigableSwitch
+            label="Dithering"
+            checked={settings.enableDithering}
+            onCheckedChange={(v) => updateSettings({ enableDithering: v })}
+            disabled={settings.enableEdge}
+          />
           {settings.enableDithering && (
-            <SettingSlider
+            <NavigableSlider
               label="Dithering Strength"
               value={settings.ditheringStrength}
               onValueChange={(v) => updateSettings({ ditheringStrength: v })}
@@ -65,7 +66,7 @@ export function RenderSettings() {
         </>
       )}
       {isWordCycle && (
-        <SettingSlider
+        <NavigableSlider
           label="Visibility Threshold"
           value={settings.wordThreshold}
           onValueChange={(v) => updateSettings({ wordThreshold: v })}
@@ -73,7 +74,7 @@ export function RenderSettings() {
           max={255}
         />
       )}
-      <SettingSwitch
+      <NavigableSwitch
         label="Invert"
         checked={settings.invertRamp}
         onCheckedChange={(v) => updateSettings({ invertRamp: v })}

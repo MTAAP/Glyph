@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef, type RefObject } from 'react';
-import { Upload } from 'lucide-react';
 import { processFile } from '@/features/input/hooks/useFileInput';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
@@ -96,10 +95,10 @@ export function DragDrop({ containerRef: _containerRef }: { containerRef: RefObj
           onChange={onFileChange}
         />
         {isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center bg-primary/5 border-2 border-dashed border-primary/40 rounded-lg m-4">
-            <div className="flex flex-col items-center gap-2 text-primary">
-              <Upload className="w-8 h-8" />
-              <span className="text-sm font-medium">Drop file here</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-accent/5 border border-dashed border-accent m-4">
+            <div className="flex flex-col items-center gap-2 text-accent">
+              <span className="text-2xl">[ + ]</span>
+              <span className="text-xs uppercase tracking-wide">Drop file here</span>
             </div>
           </div>
         )}
@@ -120,10 +119,10 @@ export function DragDrop({ containerRef: _containerRef }: { containerRef: RefObj
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
-        <div className="absolute inset-0 flex items-center justify-center bg-primary/5 border-2 border-dashed border-primary/40 rounded-lg m-4">
-          <div className="flex flex-col items-center gap-2 text-primary">
-            <Upload className="w-8 h-8" />
-            <span className="text-sm font-medium">Drop file here</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-accent/5 border border-dashed border-accent m-4">
+          <div className="flex flex-col items-center gap-2 text-accent">
+            <span className="text-2xl">[ + ]</span>
+            <span className="text-xs uppercase tracking-wide">Drop file here</span>
           </div>
         </div>
       </div>

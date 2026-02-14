@@ -9,7 +9,7 @@ Glyph is a browser-based ASCII art converter for images and video. Fully client-
 ```bash
 npm run dev          # Start dev server (Vite, HMR)
 npm run build        # tsc + vite build → dist/
-npm test             # vitest run (67 tests)
+npm test             # vitest run (147 tests across 15 files)
 npm run test:watch   # vitest watch mode
 npm run lint         # eslint
 ```
@@ -57,9 +57,41 @@ Controlled by boolean flags (`enableLuminance`, `enableEdge`, `enableDithering`)
 - **CanvasPreview**: Used for foreground/full color modes. Renders to `<canvas>` with per-character coloring.
 - Both use `usePreviewScale` hook with `ResizeObserver` for fit-to-container scaling.
 
+### Animation
+
+- **Engine** (`src/features/animation/engine/`): Pipeline applies effects to a `CharacterGrid` per-frame. Effects are registered in a central registry.
+- **Effects** (8): colorPulse, scanline, glitch, rain, flicker, colorWave, typing, blackwall — all in `engine/effects/`.
+- **Presets**: Predefined effect+palette combos (Cyberpunk Neon, Matrix, Blade Runner, VHS Glitch, Typewriter, Neon Wave).
+- **State**: `AnimationSettings` in the Zustand store. `animationPlaying` is separate from video `isPlaying`.
+- **Preview**: `useAnimationLoop` hook drives frame updates; paused frame uses `useMemo`.
+- **Export**: `collectAnimationFrames` for GIF/WebM; `formatAnimatedHtml` for self-contained HTML with JS runtime.
+
+### Crop
+
+`src/features/crop/` — interactive crop tool with drag handles. Components, hooks, and types for selecting a sub-region of the source before rendering.
+
+### Input
+
+`src/features/input/` — file picker, drag-and-drop, and keyboard handler (`KeyboardHandler.tsx`). Manages source media loading and terminal-style keyboard navigation.
+
 ### Export
 
 Formatters are in `src/features/export/formatters/`. PNG, GIF, WebM, and frames are lazy-imported (`await import(...)`) to keep the initial bundle small.
+
+### Shared Layer
+
+`src/shared/` contains reusable UI primitives split across `ui/`, `hooks/`, `types/`, and `utils/`:
+- **Navigable controls** (`NavigableSlider`, `NavigableSwitch`, `NavigableSelect`, etc.) — form components that integrate with keyboard navigation.
+- **SettingControls** (`SettingSwitch`, `SettingSlider`) — compound label+control components used across sidebar sections.
+- **FormatModal** — export format picker modal.
+- **Toast** — toast notification component.
+
+## UI / Terminal Navigation
+
+The sidebar uses a terminal-style keyboard navigation system:
+- `SidebarNavigationContext` (`src/features/settings/context/`) tracks the focused control index.
+- `KeyboardHandler` (`src/features/input/components/`) captures arrow keys, Enter, Escape for navigating and adjusting controls without a mouse.
+- All interactive sidebar controls use `Navigable*` wrappers from `src/shared/ui/` that register with the navigation context.
 
 ## Key Patterns
 
@@ -70,7 +102,20 @@ Formatters are in `src/features/export/formatters/`. PNG, GIF, WebM, and frames 
 
 ## Testing
 
-Tests live in `src/features/renderer/engine/__tests__/`. They test the pure engine functions only (no DOM, no React). Test files are excluded from `tsconfig.app.json` — vitest runs them separately with its own config (`vitest.config.ts` with `globals: true` and jsdom environment).
+Tests live in `__tests__/` directories adjacent to the code they test:
+- `src/features/renderer/engine/__tests__/` — sampler, luminance, edge-detect, dither, braille, adjustments, mapper
+- `src/features/animation/engine/__tests__/` — pipeline, colorPulse, scanline, glitch, rain, flicker, colorWave, blackwall
+
+All tests target pure engine functions (no DOM, no React). Test files are excluded from `tsconfig.app.json` — vitest runs them separately with its own config (`vitest.config.ts` with `globals: true` and jsdom environment).
+
+## Linear Integration
+
+Project tracker: [GLYPH on Linear](https://linear.app/mtaap/project/glyph-179930d6974f) (team: MTAAP)
+
+- Keep Linear in sync with development work. When completing a task, update the corresponding issue status.
+- If your work aligns with an existing issue, reference it in commits/PRs and update its status.
+- If your work does not align with a pre-existing issue, create a new one in the GLYPH project and keep it on track throughout development.
+- Link PRs to their Linear issues when creating or updating them.
 
 ## Gotchas
 

@@ -5,7 +5,7 @@ import type { CharacterGrid } from '@/shared/types';
 
 const FONT_SIZE = 10;
 const LINE_HEIGHT = 1.1;
-const FONT_FAMILY = 'monospace';
+const FONT_FAMILY = "'IBM Plex Mono', monospace";
 
 function measureCharWidth(): number {
   const canvas = document.createElement('canvas');

@@ -1,4 +1,3 @@
-import { Sun, Moon, Monitor, Info } from 'lucide-react';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
 
@@ -12,33 +11,32 @@ export function Header() {
     setTheme(order[(idx + 1) % order.length]);
   };
 
-  const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
-  const themeLabel = theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System';
+  const themeLabel = theme === 'light' ? 'LIGHT' : theme === 'dark' ? 'DARK' : 'AUTO';
 
   return (
     <header className="h-12 flex items-center justify-between px-4 border-b shrink-0">
-      <h1 className="text-lg font-semibold tracking-tight">Glyph</h1>
-      <div className="flex items-center gap-2">
+      <h1 className="text-sm font-bold tracking-wide uppercase">Glyph</h1>
+      <div className="flex items-center gap-4 text-xs">
         <button
           onClick={cycleTheme}
           className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm',
-            'text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+            'flex items-center gap-1.5 px-2 py-1',
+            'text-muted-foreground hover:text-accent',
           )}
           title={`Theme: ${themeLabel}`}
         >
-          <ThemeIcon className="w-4 h-4" />
+          <span className="text-foreground">[T]</span>
           <span className="hidden sm:inline">{themeLabel}</span>
         </button>
         <button
           className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm',
-            'text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+            'flex items-center gap-1.5 px-2 py-1',
+            'text-muted-foreground hover:text-accent',
           )}
           title="About Glyph"
         >
-          <Info className="w-4 h-4" />
-          <span className="hidden sm:inline">About</span>
+          <span className="text-foreground">[?]</span>
+          <span className="hidden sm:inline">ABOUT</span>
         </button>
       </div>
     </header>

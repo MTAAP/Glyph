@@ -1,60 +1,68 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.205 0 0);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.965 0 0);
-  --color-secondary-foreground: oklch(0.205 0 0);
-  --color-muted: oklch(0.965 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-accent: oklch(0.965 0 0);
-  --color-accent-foreground: oklch(0.205 0 0);
-  --color-destructive: oklch(0.577 0.245 27.325);
-  --color-destructive-foreground: oklch(0.577 0.245 27.325);
-  --color-border: oklch(0.922 0 0);
-  --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.708 0 0);
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  /* Light terminal variant - olive/tan palette */
+  --color-background: #e8e4d0;
+  --color-foreground: #3a3520;
+  --color-card: #d8d4c0;
+  --color-card-foreground: #3a3520;
+  --color-popover: #d8d4c0;
+  --color-popover-foreground: #3a3520;
+  --color-primary: #5a5030;
+  --color-primary-foreground: #e8e4d0;
+  --color-secondary: #ccc8b0;
+  --color-secondary-foreground: #3a3520;
+  --color-muted: #ccc8b0;
+  --color-muted-foreground: #6a6450;
+  --color-accent: #5a5030;
+  --color-accent-foreground: #e8e4d0;
+  --color-destructive: #8a4030;
+  --color-destructive-foreground: #e8e4d0;
+  --color-border: #a0986a;
+  --color-input: #a0986a;
+  --color-ring: #5a5030;
+
+  /* Remove all border radius - terminal aesthetic */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 }
 
 .dark {
-  --color-background: oklch(0.145 0 0);
-  --color-foreground: oklch(0.985 0 0);
-  --color-card: oklch(0.205 0 0);
-  --color-card-foreground: oklch(0.985 0 0);
-  --color-popover: oklch(0.205 0 0);
-  --color-popover-foreground: oklch(0.985 0 0);
-  --color-primary: oklch(0.985 0 0);
-  --color-primary-foreground: oklch(0.205 0 0);
-  --color-secondary: oklch(0.269 0 0);
-  --color-secondary-foreground: oklch(0.985 0 0);
-  --color-muted: oklch(0.269 0 0);
-  --color-muted-foreground: oklch(0.708 0 0);
-  --color-accent: oklch(0.269 0 0);
-  --color-accent-foreground: oklch(0.985 0 0);
-  --color-destructive: oklch(0.396 0.141 25.723);
-  --color-destructive-foreground: oklch(0.637 0.237 25.331);
-  --color-border: oklch(0.269 0 0);
-  --color-input: oklch(0.269 0 0);
-  --color-ring: oklch(0.439 0 0);
+  /* Amber-on-dark CRT palette */
+  --color-background: #020201;
+  --color-foreground: #d4c87a;
+  --color-card: #030302;
+  --color-card-foreground: #d4c87a;
+  --color-popover: #030302;
+  --color-popover-foreground: #d4c87a;
+  --color-primary: #f0e090;
+  --color-primary-foreground: #020201;
+  --color-secondary: #050504;
+  --color-secondary-foreground: #d4c87a;
+  --color-muted: #050504;
+  --color-muted-foreground: #8a8260;
+  --color-accent: #f0e090;
+  --color-accent-foreground: #020201;
+  --color-destructive: #d4a87a;
+  --color-destructive-foreground: #020201;
+  --color-border: #2a2a1a;
+  --color-input: #2a2a1a;
+  --color-ring: #f0e090;
 }
 
 @layer base {
   * {
     @apply border-border;
+    transition-duration: 80ms;
+    transition-timing-function: ease;
   }
   body {
     @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
     margin: 0;
     overflow: hidden;
   }
@@ -62,4 +70,16 @@
     width: 100vw;
     height: 100vh;
   }
+}
+
+/* Hide scrollbars */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: none;
 }

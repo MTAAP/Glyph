@@ -3,6 +3,7 @@ import { useAppStore } from '@/features/settings/store';
 import { EFFECT_REGISTRY } from '../engine/registry';
 import '../engine/effects'; // Ensure effects are registered
 import { SettingSlider } from '@/shared/ui/SettingControls';
+import { NavigableButton } from '@/shared/ui/NavigableButton';
 import { cn } from '@/shared/utils/cn';
 
 interface EffectCardProps {
@@ -24,11 +25,11 @@ export function EffectCard({ index, effectKey, params, isFirst, isLast }: Effect
   const resolvedParams = { ...def.defaults, ...params };
 
   return (
-    <div className="rounded-md border p-2 space-y-2">
+    <div className="border p-2 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">{def.name}</span>
+        <span className="text-xs">{def.name}</span>
         <div className="flex items-center gap-0.5">
-          <button
+          <NavigableButton
             onClick={() => reorderEffects(index, index - 1)}
             disabled={isFirst}
             className={cn(
@@ -38,8 +39,8 @@ export function EffectCard({ index, effectKey, params, isFirst, isLast }: Effect
             title="Move up"
           >
             <ChevronUp className="w-3.5 h-3.5" />
-          </button>
-          <button
+          </NavigableButton>
+          <NavigableButton
             onClick={() => reorderEffects(index, index + 1)}
             disabled={isLast}
             className={cn(
@@ -49,14 +50,14 @@ export function EffectCard({ index, effectKey, params, isFirst, isLast }: Effect
             title="Move down"
           >
             <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-          <button
+          </NavigableButton>
+          <NavigableButton
             onClick={() => removeEffect(index)}
             className="p-0.5 rounded text-muted-foreground hover:text-destructive transition-colors"
             title="Remove effect"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </NavigableButton>
         </div>
       </div>
       {Object.entries(def.paramMeta).map(([key, meta]) => (

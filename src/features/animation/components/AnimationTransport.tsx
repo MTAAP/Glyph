@@ -15,7 +15,7 @@ export function AnimationTransport() {
       <button
         onClick={() => setAnimationPlaying(!animationPlaying)}
         className={cn(
-          'p-1.5 rounded-md text-foreground hover:bg-accent transition-colors',
+          'p-1.5 text-foreground hover:bg-accent transition-colors',
         )}
         title={animationPlaying ? 'Pause animation' : 'Play animation'}
       >
