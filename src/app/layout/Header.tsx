@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
+import { Logo } from '@/shared/ui/Logo';
 
 function AboutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEffect(() => {
@@ -21,14 +22,16 @@ function AboutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-background/80" onClick={onClose} />
       <div className="relative w-full max-w-sm border bg-card shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold tracking-wide uppercase">Glyph</h2>
+        <div className="flex justify-end mb-2">
           <button
             onClick={onClose}
             className="text-xs text-muted-foreground hover:text-accent focus:outline-none"
           >
             [ESC] Close
           </button>
+        </div>
+        <div className="mb-4">
+          <Logo variant="full" />
         </div>
         <div className="space-y-3 text-xs text-muted-foreground">
           <p className="text-foreground">
@@ -75,7 +78,7 @@ export function Header() {
   return (
     <>
       <header className="h-12 flex items-center justify-between px-4 border-b shrink-0">
-        <h1 className="text-sm font-bold tracking-wide uppercase">Glyph</h1>
+        <Logo variant="compact" />
         <div className="flex items-center gap-4 text-xs">
           <button
             onClick={cycleTheme}
