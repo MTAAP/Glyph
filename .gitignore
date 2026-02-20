@@ -26,3 +26,5 @@ WhatsApp Video 2026-01-27 at 02.16.28.mp4
 
 # MCP config (contains API keys)
 .mcp.json
+.dmux/
+/.dmux-hooks
