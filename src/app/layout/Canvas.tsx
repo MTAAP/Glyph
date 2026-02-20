@@ -46,11 +46,17 @@ export function Canvas() {
     const w = window as unknown as Record<string, unknown>;
     w.__glyphFullscreenToggle = fullscreen.toggle;
     w.__glyphOverlayToggle = toggleOverlay;
+    w.__glyphZoomIn = zoom.zoomIn;
+    w.__glyphZoomOut = zoom.zoomOut;
+    w.__glyphZoomFit = zoom.setFit;
     return () => {
       delete w.__glyphFullscreenToggle;
       delete w.__glyphOverlayToggle;
+      delete w.__glyphZoomIn;
+      delete w.__glyphZoomOut;
+      delete w.__glyphZoomFit;
     };
-  }, [fullscreen.toggle, toggleOverlay]);
+  }, [fullscreen.toggle, toggleOverlay, zoom.zoomIn, zoom.zoomOut, zoom.setFit]);
 
   // Show loading indicator when rendering and no result exists yet
   const showLoading = isRendering && !renderResult && hasSource;

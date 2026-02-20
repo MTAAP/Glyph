@@ -186,6 +186,34 @@ export function KeyboardHandler() {
           state.setTheme(themeOrder[(themeIdx + 1) % themeOrder.length]);
           break;
         }
+        case '+':
+        case '=': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          const zoomInFn = (window as unknown as Record<string, unknown>).__glyphZoomIn;
+          if (typeof zoomInFn === 'function') {
+            (zoomInFn as () => void)();
+          }
+          break;
+        }
+        case '-': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          const zoomOutFn = (window as unknown as Record<string, unknown>).__glyphZoomOut;
+          if (typeof zoomOutFn === 'function') {
+            (zoomOutFn as () => void)();
+          }
+          break;
+        }
+        case '0': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          const zoomFitFn = (window as unknown as Record<string, unknown>).__glyphZoomFit;
+          if (typeof zoomFitFn === 'function') {
+            (zoomFitFn as () => void)();
+          }
+          break;
+        }
       }
     };
 
