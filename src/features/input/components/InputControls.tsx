@@ -40,6 +40,7 @@ export function InputControls() {
       return;
     }
     fileInputRef.current?.click();
+    return () => { didMountFilePicker.current = false; };
   }, [triggerFilePicker]);
 
   const nav = useSidebarNavigationOptional();
