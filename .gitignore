@@ -32,3 +32,5 @@ WhatsApp Video 2026-01-27 at 02.16.28.mp4
 
 # Playwright CLI artifacts
 .playwright-cli
+.dmux/
+/.dmux-hooks
