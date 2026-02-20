@@ -91,6 +91,51 @@ export const ANIMATION_PRESETS: AnimationPreset[] = [
     loopMode: 'loop',
     colorMode: 'foreground',
   },
+  {
+    key: 'dissolve-in',
+    name: 'Dissolve In',
+    description: 'Characters randomly appear like particles dissolving into view',
+    effects: [
+      { key: 'dissolve', params: { speed: 0.8, density: 1 } },
+    ],
+    cycleDuration: 4,
+    loopMode: 'once',
+  },
+  {
+    key: 'marquee',
+    name: 'Marquee',
+    description: 'Scrolling ticker with retro scanlines',
+    effects: [
+      { key: 'scroll', params: { direction: 0, speed: 1.5 } },
+      { key: 'scanline', params: { bandWidth: 3, dimAmount: 0.3 } },
+    ],
+    cycleDuration: 4,
+    loopMode: 'loop',
+  },
+  {
+    key: 'tv-static',
+    name: 'TV Static',
+    description: 'Broken TV aesthetic with heavy noise and flicker',
+    effects: [
+      { key: 'staticNoise', params: { density: 0.6, intensity: 0.9 } },
+      { key: 'flicker', params: { intensity: 0.3, brightnessBoost: 0.4 } },
+    ],
+    cycleDuration: 2,
+    loopMode: 'loop',
+    colorMode: 'foreground',
+  },
+  {
+    key: 'lightning-storm',
+    name: 'Lightning Storm',
+    description: 'Dramatic weather with lightning flashes and rain',
+    effects: [
+      { key: 'invertFlash', params: { frequency: 2, duration: 0.1 } },
+      { key: 'rain', params: { density: 0.4, speed: 1.2, trailLength: 6 } },
+    ],
+    cycleDuration: 5,
+    loopMode: 'loop',
+    colorMode: 'foreground',
+  },
 ];
 
 export function getAnimationPreset(key: string): AnimationPreset | undefined {

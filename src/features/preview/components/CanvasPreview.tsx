@@ -1,10 +1,10 @@
 import { useRef, useEffect, useMemo, type RefObject } from 'react';
 import { useAppStore } from '@/features/settings/store';
-import { usePreviewScale } from '@/features/preview/hooks/usePreviewScale';
+import { usePreviewScale, type ScaleMode } from '@/features/preview/hooks/usePreviewScale';
 import type { CharacterGrid } from '@/shared/types';
 
-const FONT_SIZE = 12;
-const FONT_FAMILY = 'monospace';
+const FONT_SIZE = 10;
+const FONT_FAMILY = "'IBM Plex Mono', 'Courier New', monospace";
 
 function measureCharDimensions(): { charWidth: number; charHeight: number } {
   const canvas = document.createElement('canvas');
@@ -12,16 +12,20 @@ function measureCharDimensions(): { charWidth: number; charHeight: number } {
   ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
   const metrics = ctx.measureText('M');
   const charWidth = metrics.width;
-  const charHeight = FONT_SIZE * 1.2;
+  const charHeight = FONT_SIZE * 1.1;
   return { charWidth, charHeight };
 }
 
 export function CanvasPreview({
   grid,
   containerRef,
+  scaleMode = 'fit',
+  customScale = 1,
 }: {
   grid: CharacterGrid;
   containerRef: RefObject<HTMLDivElement | null>;
+  scaleMode?: ScaleMode;
+  customScale?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settings = useAppStore((s) => s.settings);
@@ -34,7 +38,7 @@ export function CanvasPreview({
   const contentWidth = grid[0]?.length ? grid[0].length * cellPitchX : 0;
   const contentHeight = grid.length * cellPitchY;
 
-  const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight);
+  const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight, scaleMode, customScale);
 
   useEffect(() => {
     const canvas = canvasRef.current;

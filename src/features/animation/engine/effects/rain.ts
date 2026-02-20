@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
-import { seededRandom, brightenRgb, dimRgb } from '../utils';
+import { seededRandom, brightenRgb, dimRgb, cloneCell } from '../utils';
 
 const HEAD_COLOR: RGB = [200, 255, 200];
 const TRAIL_COLOR: RGB = [0, 180, 0];
@@ -40,20 +40,16 @@ function applyRain(
 
       // Cell is above the head or below the trail: keep original but dim slightly
       if (distFromHead < 0 || distFromHead > trailLength) {
-        return {
-          char: cell.char,
-          fg: cell.fg ? dimRgb(cell.fg as RGB, 0.3) : undefined,
-          bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-        };
+        const cloned = cloneCell(cell);
+        if (cloned.fg) cloned.fg = dimRgb(cloned.fg, 0.3);
+        return cloned;
       }
 
       // Head cell: bright white-green
       if (distFromHead < 1) {
-        return {
-          char: cell.char,
-          fg: brightenRgb(HEAD_COLOR, 0.3),
-          bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-        };
+        const cloned = cloneCell(cell);
+        cloned.fg = brightenRgb(HEAD_COLOR, 0.3);
+        return cloned;
       }
 
       // Trail: fade from bright green to dim
@@ -64,11 +60,9 @@ function applyRain(
         Math.round(TRAIL_COLOR[2] * fade),
       ];
 
-      return {
-        char: cell.char,
-        fg: trailFg,
-        bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-      };
+      const cloned = cloneCell(cell);
+      cloned.fg = trailFg;
+      return cloned;
     }),
   );
 }

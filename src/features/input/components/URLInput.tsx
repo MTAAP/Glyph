@@ -72,7 +72,7 @@ export function URLInput() {
     } catch (err) {
       const message =
         err instanceof TypeError
-          ? 'Failed to fetch URL. This may be a CORS issue.'
+          ? 'Failed to fetch URL. This may be a CORS issue. Try downloading the image and uploading it directly.'
           : `Failed to fetch: ${err instanceof Error ? err.message : 'Unknown error'}`;
       addToast({ type: 'error', message });
     } finally {

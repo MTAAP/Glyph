@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { ExportOptions } from '@/shared/types/index.ts';
 import { cn } from '@/shared/utils/cn.ts';
 import { NavigableRadio } from '@/shared/ui/NavigableRadio.tsx';
@@ -5,8 +6,16 @@ import { NavigableNumberInput } from '@/shared/ui/NavigableNumberInput.tsx';
 import { NavigableColorInput } from '@/shared/ui/NavigableColorInput.tsx';
 import { NavigableSwitch } from '@/shared/ui/NavigableSwitch.tsx';
 import { NavigableSlider } from '@/shared/ui/NavigableSlider.tsx';
+import { NavigableSelect } from '@/shared/ui/NavigableSelect.tsx';
 
 type Format = ExportOptions['format'];
+
+const PNG_FONT_FAMILIES = [
+  { value: "'IBM Plex Mono', 'Courier New', monospace", label: 'IBM Plex Mono' },
+  { value: "'Courier New', monospace", label: 'Courier New' },
+  { value: 'monospace', label: 'Monospace' },
+  { value: "'Fira Code', monospace", label: 'Fira Code' },
+];
 
 interface FormatOptionsProps {
   selectedFormat: Format | null;
@@ -14,11 +23,29 @@ interface FormatOptionsProps {
   onChange: (options: Partial<ExportOptions>) => void;
 }
 
+/** Map internal GIF quality (1-30, lower=better) to display value (1-30, higher=better) */
+function gifQualityToDisplay(quality: number): number {
+  return 31 - quality;
+}
+
+/** Map display value (1-30, higher=better) back to internal quality */
+function displayToGifQuality(display: number): number {
+  return 31 - display;
+}
+
+function gifQualityLabel(display: number): string {
+  if (display >= 25) return 'High';
+  if (display >= 15) return 'Medium';
+  return 'Low';
+}
+
 export function FormatOptions({
   selectedFormat,
   options,
   onChange,
 }: FormatOptionsProps) {
+  const savedPngBgRef = useRef('#1a1a1a');
+
   if (!selectedFormat) return null;
 
   const inputClass = cn(
@@ -49,7 +76,7 @@ export function FormatOptions({
 
     case 'html':
       return (
-        <div className="flex flex-col gap-2 p-3 rounded-lg border bg-card">
+        <div className="flex flex-col gap-2 p-3 border bg-card">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             HTML Options
           </span>
@@ -81,7 +108,7 @@ export function FormatOptions({
 
     case 'png':
       return (
-        <div className="flex flex-col gap-2 p-3 rounded-lg border bg-card">
+        <div className="flex flex-col gap-2 p-3 border bg-card">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             PNG Options
           </span>
@@ -92,42 +119,69 @@ export function FormatOptions({
             min={6}
             max={48}
           />
+          <NavigableSelect
+            label="Font family"
+            value={options.pngFontFamily ?? "'IBM Plex Mono', 'Courier New', monospace"}
+            onValueChange={(v) => onChange({ ...options, pngFontFamily: v })}
+            options={PNG_FONT_FAMILIES}
+          />
+          <NavigableSlider
+            label="Padding"
+            value={options.pngPadding ?? 16}
+            onValueChange={(v) => onChange({ ...options, pngPadding: v })}
+            min={0}
+            max={64}
+            step={1}
+            formatValue={(v) => `${v}px`}
+          />
           <NavigableColorInput
             label="Background"
             value={
               options.pngBackground === 'transparent'
-                ? '#000000'
+                ? savedPngBgRef.current
                 : (options.pngBackground ?? '#1a1a1a')
             }
-            onChange={(v) => onChange({ ...options, pngBackground: v })}
+            onChange={(v) => {
+              savedPngBgRef.current = v;
+              if (options.pngBackground !== 'transparent') {
+                onChange({ ...options, pngBackground: v });
+              }
+            }}
           />
           <NavigableSwitch
             label="Transparent background"
             checked={options.pngBackground === 'transparent'}
-            onCheckedChange={(v) =>
-              onChange({
-                ...options,
-                pngBackground: v ? 'transparent' : '#1a1a1a',
-              })
-            }
+            onCheckedChange={(v) => {
+              if (v) {
+                const current = options.pngBackground;
+                if (current && current !== 'transparent') {
+                  savedPngBgRef.current = current;
+                }
+                onChange({ ...options, pngBackground: 'transparent' });
+              } else {
+                onChange({ ...options, pngBackground: savedPngBgRef.current });
+              }
+            }}
           />
         </div>
       );
 
-    case 'gif':
+    case 'gif': {
+      const internalQuality = options.gifQuality ?? 10;
+      const displayValue = gifQualityToDisplay(internalQuality);
       return (
-        <div className="flex flex-col gap-2 p-3 rounded-lg border bg-card">
+        <div className="flex flex-col gap-2 p-3 border bg-card">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             GIF Options
           </span>
           <NavigableSlider
             label="Quality"
-            value={options.gifQuality ?? 10}
-            onValueChange={(v) => onChange({ ...options, gifQuality: v })}
+            value={displayValue}
+            onValueChange={(v) => onChange({ ...options, gifQuality: displayToGifQuality(v) })}
             min={1}
             max={30}
             step={1}
-            formatValue={(v) => String(v)}
+            formatValue={(v) => `${gifQualityLabel(v)} (${v})`}
           />
           <NavigableSwitch
             label="Loop"
@@ -136,10 +190,11 @@ export function FormatOptions({
           />
         </div>
       );
+    }
 
     case 'webm':
       return (
-        <div className="flex flex-col gap-2 p-3 rounded-lg border bg-card">
+        <div className="flex flex-col gap-2 p-3 border bg-card">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             WebM Options
           </span>
@@ -157,7 +212,7 @@ export function FormatOptions({
 
     case 'frames':
       return (
-        <div className="flex flex-col gap-2 p-3 rounded-lg border bg-card">
+        <div className="flex flex-col gap-2 p-3 border bg-card">
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Frames Options
           </span>

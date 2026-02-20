@@ -51,9 +51,17 @@ export function ExportBar() {
   );
   const disabled = !renderResult || isExporting;
 
-  const handleExport = (format: Format) => {
-    setSelectedFormat(format);
-    exportAs(format, formatOptions);
+  const handleSelectFormat = (format: Format) => {
+    setSelectedFormat((prev) => {
+      if (prev === format) return null;
+      setFormatOptions({});
+      return format;
+    });
+  };
+
+  const handleExport = () => {
+    if (!selectedFormat) return;
+    exportAs(selectedFormat, formatOptions);
   };
 
   const handleCopy = (format: 'txt' | 'ansi' | 'html') => {
@@ -66,23 +74,24 @@ export function ExportBar() {
     return true;
   });
 
+  const selectedLabel = FORMAT_BUTTONS.find((f) => f.format === selectedFormat)?.label;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1 flex-wrap">
         {visibleFormats.map(({ format, label, copyable }) => (
           <div key={format} className="flex items-center">
             <NavigableButton
-              onClick={() => handleExport(format)}
+              onClick={() => handleSelectFormat(format)}
               disabled={disabled}
               className={cn(
                 'px-2 py-1 text-xs border border-border',
                 'text-muted-foreground hover:text-accent hover:border-accent',
                 'disabled:opacity-50 disabled:pointer-events-none',
                 selectedFormat === format &&
-                  isExporting &&
                   'border-accent text-accent bg-accent/10',
               )}
-              title={`Export as ${label}`}
+              title={`Select ${label} format`}
             >
               {label}
             </NavigableButton>
@@ -104,22 +113,55 @@ export function ExportBar() {
             )}
           </div>
         ))}
+        <NavigableButton
+          onClick={() => copyToClipboard('markdown')}
+          disabled={disabled}
+          className={cn(
+            'px-2 py-1 text-xs border border-border',
+            'text-muted-foreground hover:text-accent hover:border-accent',
+            'disabled:opacity-50 disabled:pointer-events-none',
+          )}
+          title="Copy as Markdown code block"
+        >
+          MD [C]
+        </NavigableButton>
       </div>
 
       {isExporting && (
-        <div className="h-1 bg-border overflow-hidden">
-          <div
-            className="h-full bg-accent"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1.5 bg-border overflow-hidden">
+            <div
+              className="h-full bg-accent transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground shrink-0">
+            Exporting {selectedLabel ?? ''}... {Math.round(progress)}%
+          </span>
         </div>
       )}
 
-      <FormatOptions
-        selectedFormat={selectedFormat}
-        options={formatOptions}
-        onChange={setFormatOptions}
-      />
+      {selectedFormat && (
+        <>
+          <FormatOptions
+            selectedFormat={selectedFormat}
+            options={formatOptions}
+            onChange={setFormatOptions}
+          />
+          <NavigableButton
+            onClick={handleExport}
+            disabled={disabled}
+            className={cn(
+              'w-full px-3 py-2 text-xs border border-accent',
+              'bg-accent/10 text-accent',
+              'hover:bg-accent/20',
+              'disabled:opacity-50 disabled:pointer-events-none',
+            )}
+          >
+            {isExporting ? 'Exporting...' : `Export as ${selectedLabel}`}
+          </NavigableButton>
+        </>
+      )}
     </div>
   );
 }

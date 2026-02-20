@@ -7,6 +7,12 @@ import { cn } from '@/shared/utils/cn';
 
 const MAX_WARN_SIZE = 200 * 1024 * 1024; // 200 MB
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
 export function InputControls() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chooseFileRef = useRef<HTMLButtonElement>(null);
@@ -27,8 +33,14 @@ export function InputControls() {
   const triggerFilePicker = useAppStore((s) => s.triggerFilePicker);
 
   // Trigger file picker when openFilePicker is called from keyboard
+  const didMountFilePicker = useRef(false);
   useEffect(() => {
+    if (!didMountFilePicker.current) {
+      didMountFilePicker.current = true;
+      return;
+    }
     fileInputRef.current?.click();
+    return () => { didMountFilePicker.current = false; };
   }, [triggerFilePicker]);
 
   const nav = useSidebarNavigationOptional();
@@ -147,6 +159,20 @@ export function InputControls() {
           </div>
         )}
       </div>
+      {sourceInfo && (
+        <div className="text-xs text-muted-foreground space-y-0.5 border border-border p-2">
+          <div className="text-foreground truncate" title={sourceInfo.filename}>
+            {sourceInfo.filename}
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            <span>{sourceInfo.width}&times;{sourceInfo.height}</span>
+            <span>{sourceInfo.format.toUpperCase()}</span>
+            {sourceInfo.type === 'video' && sourceInfo.duration != null && (
+              <span>{formatDuration(sourceInfo.duration)}</span>
+            )}
+          </div>
+        </div>
+      )}
       <input
         ref={fileInputRef}
         type="file"

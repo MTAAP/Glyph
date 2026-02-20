@@ -11,6 +11,23 @@ import { getActiveCharset } from '@/features/settings/presets';
 const DEBOUNCE_MS = 150;
 const MAX_RETRIES = 3;
 
+// Persistent canvas for extractImageData to avoid per-render allocation
+let sharedCanvas: HTMLCanvasElement | null = null;
+let sharedCtx: CanvasRenderingContext2D | null = null;
+
+function getSharedCanvas(width: number, height: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
+  if (!sharedCanvas || !sharedCtx) {
+    sharedCanvas = document.createElement('canvas');
+    sharedCtx = sharedCanvas.getContext('2d', { willReadFrequently: true })!;
+  }
+  // Only resize when dimensions change
+  if (sharedCanvas.width !== width || sharedCanvas.height !== height) {
+    sharedCanvas.width = width;
+    sharedCanvas.height = height;
+  }
+  return { canvas: sharedCanvas, ctx: sharedCtx };
+}
+
 function createRenderWorker(): Worker | null {
   try {
     return new Worker(new URL('../worker/render.worker.ts', import.meta.url), {
@@ -32,18 +49,12 @@ function extractImageData(
     const sy = Math.round(cropRect.y * sourceHeight);
     const sw = Math.round(cropRect.width * sourceWidth);
     const sh = Math.round(cropRect.height * sourceHeight);
-    const canvas = document.createElement('canvas');
-    canvas.width = sw;
-    canvas.height = sh;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    const { ctx } = getSharedCanvas(sw, sh);
     ctx.drawImage(source, sx, sy, sw, sh, 0, 0, sw, sh);
     return ctx.getImageData(0, 0, sw, sh);
   }
 
-  const canvas = document.createElement('canvas');
-  canvas.width = sourceWidth;
-  canvas.height = sourceHeight;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  const { ctx } = getSharedCanvas(sourceWidth, sourceHeight);
   ctx.drawImage(source, 0, 0, sourceWidth, sourceHeight);
   return ctx.getImageData(0, 0, sourceWidth, sourceHeight);
 }
@@ -66,7 +77,7 @@ function renderOnMainThread(
     settings.aspectRatioCorrection,
   );
 
-  const samples = applyAdjustments(rawSamples, settings.brightness, settings.contrast);
+  const samples = applyAdjustments(rawSamples, settings.brightness, settings.contrast, settings.saturation, settings.hueShift);
 
   const grid = mapToCharacters(
     samples,
@@ -93,6 +104,14 @@ export function useRenderer(): void {
   const retriesRef = useRef(0);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pendingRenderRef = useRef(false);
+  // Store the last worker message so it can be replayed after a crash recovery
+  const lastWorkerMessageRef = useRef<{
+    imageData: ArrayBuffer;
+    width: number;
+    settings: RenderSettings;
+    sourceWidth: number;
+    sourceHeight: number;
+  } | null>(null);
 
   useEffect(() => {
     workerRef.current = createRenderWorker();
@@ -124,10 +143,30 @@ export function useRenderer(): void {
 
       if (retriesRef.current < MAX_RETRIES) {
         retriesRef.current++;
+        workerRef.current?.terminate();
         workerRef.current = createRenderWorker();
         if (workerRef.current) {
           workerRef.current.onmessage = handleMessage;
           workerRef.current.onerror = handleError;
+
+          // Re-dispatch the last render request on the new worker
+          const lastMsg = lastWorkerMessageRef.current;
+          if (lastMsg) {
+            useAppStore.getState().setIsRendering(true);
+            const buffer = lastMsg.imageData.slice(0);
+            workerRef.current.postMessage(
+              {
+                type: 'render',
+                imageData: buffer,
+                width: lastMsg.width,
+                height: 0,
+                settings: lastMsg.settings,
+                sourceWidth: lastMsg.sourceWidth,
+                sourceHeight: lastMsg.sourceHeight,
+              },
+              [buffer],
+            );
+          }
         }
       } else {
         useAppStore.getState().addToast({
@@ -176,7 +215,16 @@ export function useRenderer(): void {
       useAppStore.getState().setIsRendering(true);
 
       if (workerRef.current) {
-        const buffer = imageData.data.buffer.slice(0);
+        // Store a copy for crash recovery replay before transferring the buffer
+        lastWorkerMessageRef.current = {
+          imageData: imageData.data.buffer.slice(0),
+          width: s.outputWidth,
+          settings: s,
+          sourceWidth: effectiveWidth,
+          sourceHeight: effectiveHeight,
+        };
+        // Transfer the buffer directly; imageData is not used after this point
+        const buffer = imageData.data.buffer;
         workerRef.current.postMessage(
           {
             type: 'render',

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { RenderSettings, SourceInfo, RenderResult, AnimationSettings, ActiveEffect } from '@/shared/types';
 import type { CropRect, AspectRatioPreset } from '@/features/crop/types';
 import { DEFAULT_CROP, enforceAspectOnRect } from '@/features/crop/types';
@@ -95,6 +96,8 @@ const DEFAULT_SETTINGS: RenderSettings = {
 
   brightness: 0,
   contrast: 0,
+  saturation: 100,
+  hueShift: 0,
 
   enableLuminance: true,
   enableEdge: false,
@@ -132,7 +135,7 @@ const DEFAULT_ANIMATION: AnimationSettings = {
 
 let toastCounter = 0;
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>()(persist((set) => ({
   sourceImage: null,
   sourceVideo: null,
   sourceInfo: null,
@@ -314,4 +317,22 @@ export const useAppStore = create<AppState>((set) => ({
     formatModalMode: mode ?? state.formatModalMode,
   })),
   openFilePicker: () => set((state) => ({ triggerFilePicker: (state.triggerFilePicker ?? 0) + 1 })),
+}), {
+  name: 'glyph-settings',
+  version: 1,
+  migrate: (persisted: unknown, version: number) => {
+    if (version === 0) {
+      const state = persisted as { settings?: Record<string, unknown>; theme?: string };
+      if (state.settings) {
+        state.settings.saturation ??= 100;
+        state.settings.hueShift ??= 0;
+      }
+      return state;
+    }
+    return persisted;
+  },
+  partialize: (state) => ({
+    settings: state.settings,
+    theme: state.theme,
+  }),
 }));

@@ -182,10 +182,7 @@ function buildCharsetGrid(
       settings.ditheringStrength,
     );
     charGrid = mapLuminanceToChars(dithered, charset, settings.invertRamp);
-  } else if (settings.enableLuminance) {
-    charGrid = mapLuminanceToChars(luminanceGrid, charset, settings.invertRamp);
   } else {
-    // Default to luminance mapping even if not explicitly enabled
     charGrid = mapLuminanceToChars(luminanceGrid, charset, settings.invertRamp);
   }
 

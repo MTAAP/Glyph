@@ -1,11 +1,11 @@
 import { useMemo, type RefObject } from 'react';
 import { useAppStore } from '@/features/settings/store';
-import { usePreviewScale } from '@/features/preview/hooks/usePreviewScale';
+import { usePreviewScale, type ScaleMode } from '@/features/preview/hooks/usePreviewScale';
 import type { CharacterGrid } from '@/shared/types';
 
 const FONT_SIZE = 10;
 const LINE_HEIGHT = 1.1;
-const FONT_FAMILY = "'IBM Plex Mono', monospace";
+const FONT_FAMILY = "'IBM Plex Mono', 'Courier New', monospace";
 
 function measureCharWidth(): number {
   const canvas = document.createElement('canvas');
@@ -21,9 +21,13 @@ function rgbStr(c: [number, number, number]): string {
 export function TextPreview({
   grid,
   containerRef,
+  scaleMode = 'fit',
+  customScale = 1,
 }: {
   grid: CharacterGrid;
   containerRef: RefObject<HTMLDivElement | null>;
+  scaleMode?: ScaleMode;
+  customScale?: number;
 }) {
   const settings = useAppStore((s) => s.settings);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
@@ -35,7 +39,7 @@ export function TextPreview({
   const contentWidth = cols * charWidth * cellSpacingX;
   const contentHeight = rows * FONT_SIZE * LINE_HEIGHT * cellSpacingY;
 
-  const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight);
+  const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight, scaleMode, customScale);
 
   const content = useMemo(() => {
     const spacingStyle = {

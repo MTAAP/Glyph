@@ -19,6 +19,19 @@ const CYCLE_DIRECTIONS: { value: CycleDirection; label: string }[] = [
   { value: 'reverse', label: 'Rev' },
 ];
 
+/** Deduplicate characters while preserving order. */
+function deduplicateChars(input: string): string {
+  const seen = new Set<string>();
+  let result = '';
+  for (const ch of input) {
+    if (!seen.has(ch)) {
+      seen.add(ch);
+      result += ch;
+    }
+  }
+  return result;
+}
+
 export function CharsetPicker() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
@@ -26,6 +39,15 @@ export function CharsetPicker() {
   const activeChars = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const isCustom = settings.charsetPreset === 'custom';
   const isWord = settings.charsetPreset === 'word';
+
+  const dedupedCustom = deduplicateChars(settings.customCharset);
+  const isCustomInvalid = isCustom && dedupedCustom.length < 2;
+
+  const handleCustomCharsetChange = (value: string) => {
+    // Silently deduplicate on input
+    const deduped = deduplicateChars(value);
+    updateSettings({ customCharset: deduped });
+  };
 
   return (
     <div className="space-y-3">
@@ -68,11 +90,18 @@ export function CharsetPicker() {
       )}
 
       {isCustom && (
-        <NavigableTextInput
-          value={settings.customCharset}
-          onChange={(v) => updateSettings({ customCharset: v })}
-          placeholder="Enter characters light to dark..."
-        />
+        <>
+          <NavigableTextInput
+            value={settings.customCharset}
+            onChange={handleCustomCharsetChange}
+            placeholder="Enter characters light to dark..."
+          />
+          {isCustomInvalid && (
+            <p className="text-xs text-red-400">
+              At least 2 unique characters required.
+            </p>
+          )}
+        </>
       )}
 
       {/* Density preview strip */}

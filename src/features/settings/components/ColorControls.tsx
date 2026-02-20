@@ -3,6 +3,7 @@ import { NavigableSegmented } from '@/shared/ui/NavigableSegmented';
 import { NavigableSelect } from '@/shared/ui/NavigableSelect';
 import { NavigableColorInput } from '@/shared/ui/NavigableColorInput';
 import type { RenderSettings } from '@/shared/types';
+import { cn } from '@/shared/utils/cn';
 
 type ColorMode = RenderSettings['colorMode'];
 
@@ -19,9 +20,21 @@ const COLOR_DEPTHS = [
   { value: 'truecolor', label: 'Truecolor' },
 ];
 
+const MONO_PALETTES: { name: string; fg: string; bg: string }[] = [
+  { name: 'Terminal Green', fg: '#00ff00', bg: '#000000' },
+  { name: 'Amber CRT', fg: '#ffb000', bg: '#000000' },
+  { name: 'Paper White', fg: '#333333', bg: '#f5f5dc' },
+  { name: 'Dracula', fg: '#f8f8f2', bg: '#282a36' },
+  { name: 'Solarized', fg: '#839496', bg: '#002b36' },
+];
+
 export function ColorControls() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
+
+  const applyPalette = (fg: string, bg: string) => {
+    updateSettings({ monoFgColor: fg, monoBgColor: bg });
+  };
 
   return (
     <div className="space-y-3">
@@ -42,18 +55,51 @@ export function ColorControls() {
       />
 
       {settings.colorMode === 'mono' && (
-        <div className="flex justify-center gap-4">
-          <NavigableColorInput
-            label="FG"
-            value={settings.monoFgColor}
-            onChange={(v) => updateSettings({ monoFgColor: v })}
-          />
-          <NavigableColorInput
-            label="BG"
-            value={settings.monoBgColor}
-            onChange={(v) => updateSettings({ monoBgColor: v })}
-          />
-        </div>
+        <>
+          <div className="space-y-1.5">
+            <span className="text-xs">Palette</span>
+            <div className="flex gap-1 flex-wrap">
+              {MONO_PALETTES.map((palette) => {
+                const isActive = settings.monoFgColor === palette.fg && settings.monoBgColor === palette.bg;
+                return (
+                  <button
+                    key={palette.name}
+                    onClick={() => applyPalette(palette.fg, palette.bg)}
+                    title={palette.name}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2 py-1 text-xs border',
+                      'hover:border-accent',
+                      isActive
+                        ? 'border-accent text-accent bg-accent/10'
+                        : 'border-border text-muted-foreground',
+                    )}
+                  >
+                    <span
+                      className="inline-block w-3 h-3 border border-border"
+                      style={{ backgroundColor: palette.fg }}
+                    />
+                    <span
+                      className="inline-block w-3 h-3 border border-border"
+                      style={{ backgroundColor: palette.bg }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex justify-center gap-4">
+            <NavigableColorInput
+              label="FG"
+              value={settings.monoFgColor}
+              onChange={(v) => updateSettings({ monoFgColor: v })}
+            />
+            <NavigableColorInput
+              label="BG"
+              value={settings.monoBgColor}
+              onChange={(v) => updateSettings({ monoBgColor: v })}
+            />
+          </div>
+        </>
       )}
     </div>
   );

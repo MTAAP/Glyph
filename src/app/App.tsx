@@ -1,8 +1,10 @@
+import { useState, useCallback } from 'react';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { Header } from './layout/Header';
 import { Sidebar } from './layout/Sidebar';
 import { Canvas } from './layout/Canvas';
 import { CommandBar } from './layout/CommandBar';
+import { SplashScreen } from './layout/SplashScreen';
 import { ToastContainer } from '@/shared/ui/Toast';
 import { FormatModal } from '@/shared/ui/FormatModal';
 import { ClipboardHandler } from '@/features/input/components/ClipboardHandler';
@@ -40,5 +42,13 @@ function AppContent() {
 }
 
 export function App() {
-  return <AppContent />;
+  const [splashDone, setSplashDone] = useState(false);
+  const handleSplashDone = useCallback(() => setSplashDone(true), []);
+
+  return (
+    <>
+      {!splashDone && <SplashScreen onDone={handleSplashDone} />}
+      <AppContent />
+    </>
+  );
 }

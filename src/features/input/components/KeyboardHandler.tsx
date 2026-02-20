@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { CHARSET_PRESETS } from '@/features/settings/presets';
+import { revokeActiveBlobUrl } from '@/features/input/hooks/useFileInput';
 import { useSidebarNavigation } from '@/features/settings/context/SidebarNavigationContext';
 
 export function KeyboardHandler() {
@@ -27,6 +28,15 @@ export function KeyboardHandler() {
       const state = useAppStore.getState();
       const isInSidebar = target.closest('aside');
       const nav = navRef.current;
+
+      // Ctrl+S / Cmd+S: download in default format
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (state.renderResult) {
+          state.setFormatModalOpen(true, 'export');
+        }
+        return;
+      }
 
       switch (e.key) {
         case 'ArrowUp': {
@@ -100,6 +110,7 @@ export function KeyboardHandler() {
           // Ignore when typing in input fields
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
+          revokeActiveBlobUrl();
           state.setSource(null, null, null);
           state.setSourceCanvas(null);
           state.setRenderResult(null);
@@ -144,7 +155,27 @@ export function KeyboardHandler() {
         case 'f':
         case 'F': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-          state.openFilePicker();
+          // Toggle fullscreen via window-exposed function
+          const toggleFs = (window as unknown as Record<string, unknown>).__glyphFullscreenToggle;
+          if (typeof toggleFs === 'function') {
+            (toggleFs as () => void)();
+          }
+          break;
+        }
+        case 'i':
+        case 'I': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          state.updateSettings({ invertRamp: !state.settings.invertRamp });
+          break;
+        }
+        case 'o':
+        case 'O': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          // Toggle source overlay via window-exposed function
+          const toggleOverlay = (window as unknown as Record<string, unknown>).__glyphOverlayToggle;
+          if (typeof toggleOverlay === 'function') {
+            (toggleOverlay as () => void)();
+          }
           break;
         }
         case 't':
@@ -153,6 +184,34 @@ export function KeyboardHandler() {
           const themeOrder: Array<'system' | 'light' | 'dark'> = ['system', 'light', 'dark'];
           const themeIdx = themeOrder.indexOf(state.theme);
           state.setTheme(themeOrder[(themeIdx + 1) % themeOrder.length]);
+          break;
+        }
+        case '+':
+        case '=': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          const zoomInFn = (window as unknown as Record<string, unknown>).__glyphZoomIn;
+          if (typeof zoomInFn === 'function') {
+            (zoomInFn as () => void)();
+          }
+          break;
+        }
+        case '-': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          const zoomOutFn = (window as unknown as Record<string, unknown>).__glyphZoomOut;
+          if (typeof zoomOutFn === 'function') {
+            (zoomOutFn as () => void)();
+          }
+          break;
+        }
+        case '0': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          const zoomFitFn = (window as unknown as Record<string, unknown>).__glyphZoomFit;
+          if (typeof zoomFitFn === 'function') {
+            (zoomFitFn as () => void)();
+          }
           break;
         }
       }

@@ -1,6 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
+import { cloneCell } from '../utils';
 import { rgbToHsl, hslToRgb } from '@/shared/utils/color';
 
 function applyColorWave(
@@ -36,11 +37,9 @@ function applyColorWave(
       const newH = (h + hueShift) % 360;
       const newFg = hslToRgb(newH, Math.max(s, 0.5), l);
 
-      return {
-        char: cell.char,
-        fg: newFg,
-        bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-      };
+      const cloned = cloneCell(cell);
+      cloned.fg = newFg;
+      return cloned;
     }),
   );
 }

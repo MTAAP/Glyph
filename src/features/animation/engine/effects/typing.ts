@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
-import type { AnimationContext, RGB } from '../types';
+import type { AnimationContext } from '../types';
 import { registerEffect } from '../registry';
-import { seededRandom } from '../utils';
+import { seededRandom, cloneCell } from '../utils';
 
 function applyTyping(
   grid: CharacterGrid,
@@ -66,19 +66,11 @@ function applyTyping(
 
   return grid.map((row, y) =>
     row.map((cell, x) => {
-      if (revealed.has(`${y},${x}`)) {
-        return {
-          char: cell.char,
-          fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
-          bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-        };
+      const cloned = cloneCell(cell);
+      if (!revealed.has(`${y},${x}`)) {
+        cloned.char = ' ';
       }
-      // Not yet revealed: empty cell
-      return {
-        char: ' ',
-        fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
-        bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-      };
+      return cloned;
     }),
   );
 }

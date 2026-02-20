@@ -26,6 +26,21 @@ export function RenderSettings() {
         min={-100}
         max={100}
       />
+      <NavigableSlider
+        label="Saturation"
+        value={settings.saturation}
+        onValueChange={(v) => updateSettings({ saturation: v })}
+        min={0}
+        max={200}
+      />
+      <NavigableSlider
+        label="Hue Shift"
+        value={settings.hueShift}
+        onValueChange={(v) => updateSettings({ hueShift: v })}
+        min={0}
+        max={360}
+        formatValue={(v) => `${v}\u00b0`}
+      />
       {showFullControls && (
         <>
           <NavigableSwitch
@@ -33,12 +48,19 @@ export function RenderSettings() {
             checked={settings.enableLuminance}
             onCheckedChange={(v) => updateSettings({ enableLuminance: v })}
           />
-          <NavigableSwitch
-            label="Edge Detection"
-            checked={settings.enableEdge}
-            onCheckedChange={(v) => updateSettings({ enableEdge: v })}
-            disabled={settings.enableDithering}
-          />
+          <div>
+            <NavigableSwitch
+              label="Edge Detection"
+              checked={settings.enableEdge}
+              onCheckedChange={(v) => updateSettings({ enableEdge: v })}
+              disabled={settings.enableDithering}
+            />
+            {settings.enableDithering && (
+              <p className="text-xs text-muted-foreground mt-1 pl-1">
+                Disable Dithering to enable this option.
+              </p>
+            )}
+          </div>
           {settings.enableEdge && (
             <NavigableSlider
               label="Edge Threshold"
@@ -48,12 +70,19 @@ export function RenderSettings() {
               max={255}
             />
           )}
-          <NavigableSwitch
-            label="Dithering"
-            checked={settings.enableDithering}
-            onCheckedChange={(v) => updateSettings({ enableDithering: v })}
-            disabled={settings.enableEdge}
-          />
+          <div>
+            <NavigableSwitch
+              label="Dithering"
+              checked={settings.enableDithering}
+              onCheckedChange={(v) => updateSettings({ enableDithering: v })}
+              disabled={settings.enableEdge}
+            />
+            {settings.enableEdge && (
+              <p className="text-xs text-muted-foreground mt-1 pl-1">
+                Disable Edge Detection to enable this option.
+              </p>
+            )}
+          </div>
           {settings.enableDithering && (
             <NavigableSlider
               label="Dithering Strength"
