@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
-import { seededRandom } from '../utils';
+import { seededRandom, cloneCell } from '../utils';
 
 const GLITCH_CHARS = '!@#$%^&*░▒▓█';
 
@@ -17,13 +17,7 @@ function applyGlitch(
   const baseSeed = ctx.frame * 1000;
 
   // Start with a clone via map
-  let result: CharacterGrid = grid.map((row) =>
-    row.map((cell) => ({
-      char: cell.char,
-      fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
-      bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-    })),
-  );
+  let result: CharacterGrid = grid.map((row) => row.map(cloneCell));
 
   // Row shifting: randomly offset entire rows
   if (rowShift > 0) {
@@ -33,12 +27,7 @@ function applyGlitch(
         const shift = Math.round((seededRandom(baseSeed + y * 13) - 0.5) * 2 * rowShift);
         return row.map((_, x) => {
           const srcX = ((x - shift) % row.length + row.length) % row.length;
-          const src = row[srcX];
-          return {
-            char: src.char,
-            fg: src.fg ? ([...src.fg] as RGB) : undefined,
-            bg: src.bg ? ([...src.bg] as RGB) : undefined,
-          };
+          return cloneCell(row[srcX]);
         });
       }
       return row;

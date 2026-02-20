@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { processFile } from '@/features/input/hooks/useFileInput';
+import { useAppStore } from '@/features/settings/store';
 
 export function ClipboardHandler() {
   useEffect(() => {
@@ -34,7 +35,10 @@ export function ClipboardHandler() {
             return processFile(file);
           })
           .catch(() => {
-            // Silently fail for non-image URLs
+            useAppStore.getState().addToast({
+              type: 'error',
+              message: 'Could not load pasted URL. Try downloading the image and uploading it directly.',
+            });
           });
       }
     };

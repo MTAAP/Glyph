@@ -6,3 +6,7 @@ import './flicker';
 import './colorWave';
 import './typing';
 import './blackwall';
+import './dissolve';
+import './scroll';
+import './staticNoise';
+import './invertFlash';

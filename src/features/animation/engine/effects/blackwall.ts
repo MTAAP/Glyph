@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
-import { seededRandom, blendColor, brightenRgb, dimRgb } from '../utils';
+import { seededRandom, blendColor, brightenRgb, dimRgb, cloneCell } from '../utils';
 
 // Deep crimson palette — dark reds, hot crimson, near-black, with occasional cyan/white accents
 const WALL_DARK: RGB = [40, 0, 0];
@@ -173,11 +173,10 @@ function applyBlackwall(
         fg = blendColor(fg, accent, 0.6 + flashRng * 10);
       }
 
-      return {
-        char,
-        fg,
-        bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-      };
+      const cloned = cloneCell(cell);
+      cloned.char = char;
+      cloned.fg = fg;
+      return cloned;
     }),
   );
 }

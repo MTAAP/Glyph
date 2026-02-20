@@ -9,6 +9,7 @@ interface FramesOptions {
   fps?: number;
   sourceFilename?: string;
   settings?: RenderSettings;
+  colorDepth?: 8 | 16 | 256 | 'truecolor';
 }
 
 export function formatFrameSequence(
@@ -26,7 +27,7 @@ export function formatFrameSequence(
 
     let content: string;
     if (options.format === 'ans') {
-      content = formatAnsi(frames[i], 256);
+      content = formatAnsi(frames[i], options.colorDepth ?? 256);
     } else {
       const cols = frames[i].length > 0 ? frames[i][0].length : 0;
       const rows = frames[i].length;
@@ -41,12 +42,15 @@ export function formatFrameSequence(
       frames.length > 0 && frames[0].length > 0 ? frames[0][0].length : 0;
     const rows = frames.length > 0 ? frames[0].length : 0;
 
+    const fps = options.fps ?? 10;
     const metadata = {
+      version: '1.0',
       frameCount: frames.length,
-      fps: options.fps ?? 10,
+      fps,
+      duration: frames.length / fps,
       resolution: { cols, rows },
       format: options.format,
-      sourceFilename: options.sourceFilename ?? null,
+      source: options.sourceFilename ?? null,
       settings: options.settings ?? null,
       generatedAt: new Date().toISOString(),
       generator: 'Glyph',

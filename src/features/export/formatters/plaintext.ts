@@ -39,3 +39,14 @@ export function formatPlaintext(
 
   return lines.join('\n');
 }
+
+/**
+ * Wraps plaintext output in a Markdown fenced code block.
+ */
+export function formatMarkdownCodeBlock(
+  grid: CharacterGrid,
+  options: PlaintextOptions,
+): string {
+  const plaintext = formatPlaintext(grid, options);
+  return '```\n' + plaintext + '\n```';
+}

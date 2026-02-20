@@ -3,6 +3,12 @@ import type { UnencodedFrame } from 'modern-gif';
 import type { CharacterGrid } from '@/shared/types/index.ts';
 import { renderGridToCanvas } from './png.ts';
 
+export interface GifLargeFrameWarning {
+  frameCount: number;
+  estimatedSizeMb: number;
+  estimatedProcessingTimeSec: number;
+}
+
 interface GifOptions {
   fps: number;
   quality?: number;
@@ -13,6 +19,7 @@ interface GifOptions {
   cellSpacingX?: number;
   cellSpacingY?: number;
   onProgress?: (percent: number) => void;
+  onLargeFrameWarning?: (warning: GifLargeFrameWarning) => void;
 }
 
 export function formatGif(
@@ -32,6 +39,19 @@ export function formatGif(
 
   if (frames.length === 0) {
     return Promise.resolve(new Blob([], { type: 'image/gif' }));
+  }
+
+  // Warn for large frame counts (>300 frames)
+  const LARGE_FRAME_THRESHOLD = 300;
+  if (frames.length > LARGE_FRAME_THRESHOLD && options.onLargeFrameWarning) {
+    // Estimate ~50KB per frame at default quality, ~0.05s encoding per frame
+    const estimatedSizeMb = (frames.length * 50) / 1024;
+    const estimatedProcessingTimeSec = frames.length * 0.05;
+    options.onLargeFrameWarning({
+      frameCount: frames.length,
+      estimatedSizeMb: Math.round(estimatedSizeMb * 10) / 10,
+      estimatedProcessingTimeSec: Math.round(estimatedProcessingTimeSec),
+    });
   }
 
   const rows = frames[0].length;

@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
-import { brightenRgb, dimRgb } from '../utils';
+import { brightenRgb, dimRgb, cloneCell } from '../utils';
 
 function applyScanline(
   grid: CharacterGrid,
@@ -16,24 +16,18 @@ function applyScanline(
     row.map((cell) => {
       const distance = Math.abs(y - bandCenter);
       const baseFg: RGB = cell.fg ?? [200, 200, 200];
-      const baseBg = cell.bg ? ([...cell.bg] as RGB) : undefined;
+      const cloned = cloneCell(cell);
 
       if (distance < bandWidth / 2) {
         // Inside band: brighten proportional to proximity
         const strength = 1 - distance / (bandWidth / 2);
-        return {
-          char: cell.char,
-          fg: brightenRgb(baseFg, strength * 0.5),
-          bg: baseBg,
-        };
+        cloned.fg = brightenRgb(baseFg, strength * 0.5);
+        return cloned;
       }
 
       // Outside band: dim
-      return {
-        char: cell.char,
-        fg: dimRgb(baseFg, dimAmount),
-        bg: baseBg,
-      };
+      cloned.fg = dimRgb(baseFg, dimAmount);
+      return cloned;
     }),
   );
 }

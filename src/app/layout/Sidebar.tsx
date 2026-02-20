@@ -46,13 +46,9 @@ function Section({
 
 export function Sidebar() {
   const sourceInfo = useAppStore((s) => s.sourceInfo);
-  const charsetPreset = useAppStore((s) => s.settings.charsetPreset);
-  const hasCharsetOptions = charsetPreset === 'custom' || charsetPreset === 'word';
+  // Characters section is always visible so users can see the density preview strip
 
-  const defaultSections = ['input', 'crop', 'rendering', 'resolution', 'characters', 'color', 'animation', 'export'];
-  if (sourceInfo?.type === 'video') {
-    defaultSections.push('video');
-  }
+  const defaultSections = ['input', 'export'];
 
   return (
     <aside className="w-[280px] max-lg:w-full border-r max-lg:border-r-0 max-lg:border-b overflow-y-auto shrink-0 bg-card">
@@ -73,11 +69,9 @@ export function Sidebar() {
           <Section value="resolution" title="Resolution">
             <ResolutionControls />
           </Section>
-          {hasCharsetOptions && (
-            <Section value="characters" title="Characters">
-              <CharsetPicker />
-            </Section>
-          )}
+          <Section value="characters" title="Characters">
+            <CharsetPicker />
+          </Section>
           <Section value="color" title="Color">
             <ColorControls />
           </Section>

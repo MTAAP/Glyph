@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
-import { seededRandom, brightenRgb } from '../utils';
+import { seededRandom, brightenRgb, cloneCell } from '../utils';
 
 function applyFlicker(
   grid: CharacterGrid,
@@ -18,18 +18,12 @@ function applyFlicker(
 
       if (rng < intensity) {
         const baseFg: RGB = cell.fg ?? [200, 200, 200];
-        return {
-          char: cell.char,
-          fg: brightenRgb(baseFg, brightnessBoost),
-          bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-        };
+        const cloned = cloneCell(cell);
+        cloned.fg = brightenRgb(baseFg, brightnessBoost);
+        return cloned;
       }
 
-      return {
-        char: cell.char,
-        fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
-        bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-      };
+      return cloneCell(cell);
     }),
   );
 }

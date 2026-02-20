@@ -7,6 +7,8 @@ export interface RenderSettings {
 
   brightness: number;
   contrast: number;
+  saturation: number;
+  hueShift: number;
 
   enableLuminance: boolean;
   enableEdge: boolean;
@@ -55,6 +57,8 @@ export interface ExportOptions {
   htmlFontFamily?: string;
   htmlBackground?: string;
   pngFontSize?: number;
+  pngFontFamily?: string;
+  pngPadding?: number;
   pngBackground?: string | 'transparent';
   gifQuality?: number;
   gifLoop?: boolean;

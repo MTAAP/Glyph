@@ -26,7 +26,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       settings.aspectRatioCorrection,
     );
 
-    const samples = applyAdjustments(rawSamples, settings.brightness, settings.contrast);
+    const samples = applyAdjustments(rawSamples, settings.brightness, settings.contrast, settings.saturation, settings.hueShift);
 
     const grid = mapToCharacters(
       samples,

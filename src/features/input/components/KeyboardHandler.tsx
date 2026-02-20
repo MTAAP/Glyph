@@ -28,6 +28,15 @@ export function KeyboardHandler() {
       const isInSidebar = target.closest('aside');
       const nav = navRef.current;
 
+      // Ctrl+S / Cmd+S: download in default format
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (state.renderResult) {
+          state.setFormatModalOpen(true, 'export');
+        }
+        return;
+      }
+
       switch (e.key) {
         case 'ArrowUp': {
           // Don't intercept when Radix select is open
@@ -144,7 +153,27 @@ export function KeyboardHandler() {
         case 'f':
         case 'F': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-          state.openFilePicker();
+          // Toggle fullscreen via window-exposed function
+          const toggleFs = (window as unknown as Record<string, unknown>).__glyphFullscreenToggle;
+          if (typeof toggleFs === 'function') {
+            (toggleFs as () => void)();
+          }
+          break;
+        }
+        case 'i':
+        case 'I': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          state.updateSettings({ invertRamp: !state.settings.invertRamp });
+          break;
+        }
+        case 'o':
+        case 'O': {
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+          // Toggle source overlay via window-exposed function
+          const toggleOverlay = (window as unknown as Record<string, unknown>).__glyphOverlayToggle;
+          if (typeof toggleOverlay === 'function') {
+            (toggleOverlay as () => void)();
+          }
           break;
         }
         case 't':

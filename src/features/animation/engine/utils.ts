@@ -1,14 +1,16 @@
-import type { CharacterGrid } from '@/shared/types';
+import type { CharacterGrid, CharacterCell } from '@/shared/types';
 import type { RGB } from './types';
 
+export function cloneCell(cell: CharacterCell): CharacterCell {
+  return {
+    char: cell.char,
+    fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
+    bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
+  };
+}
+
 export function cloneGrid(grid: CharacterGrid): CharacterGrid {
-  return grid.map((row) =>
-    row.map((cell) => ({
-      char: cell.char,
-      fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
-      bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-    })),
-  );
+  return grid.map((row) => row.map(cloneCell));
 }
 
 export function brightenRgb(color: RGB, amount: number): RGB {

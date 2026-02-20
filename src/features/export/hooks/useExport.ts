@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAppStore } from '@/features/settings/store.ts';
 import type { ExportOptions, CharacterGrid } from '@/shared/types/index.ts';
-import { formatPlaintext } from '../formatters/plaintext.ts';
+import { formatPlaintext, formatMarkdownCodeBlock } from '../formatters/plaintext.ts';
 import { formatAnsi } from '../formatters/ansi.ts';
 import { formatHtml } from '../formatters/html.ts';
 import { collectVideoFrames } from '../collectFrames.ts';
@@ -123,6 +123,13 @@ export function useExport() {
           format,
         );
 
+        // Shared flag: animation export when animation is active on a non-video source
+        const isAnimationExport = state.animation.enabled && state.animation.effects.length > 0
+          && (sourceInfo?.type !== 'video' || !sourceInfo.duration);
+        const effectiveFps = isAnimationExport
+          ? state.animation.fps
+          : settings.targetFPS * settings.playbackSpeed;
+
         switch (format) {
           case 'txt': {
             const text = formatPlaintext(grid, {
@@ -165,6 +172,8 @@ export function useExport() {
             const { formatPng } = await import('../formatters/png.ts');
             const blob = await formatPng(grid, {
               fontSize: extraOptions?.pngFontSize,
+              fontFamily: extraOptions?.pngFontFamily,
+              padding: extraOptions?.pngPadding,
               background: extraOptions?.pngBackground,
               cellSpacingX,
               cellSpacingY,
@@ -175,11 +184,6 @@ export function useExport() {
 
           case 'gif': {
             const { formatGif } = await import('../formatters/gif.ts');
-            const isAnimationExport = state.animation.enabled && state.animation.effects.length > 0
-              && (sourceInfo?.type !== 'video' || !sourceInfo.duration);
-            const effectiveFps = isAnimationExport
-              ? state.animation.fps
-              : settings.targetFPS * settings.playbackSpeed;
             const gifFrames = await getFrames(grid, state, (p) =>
               setProgress(Math.round(p * 0.8)),
             );
@@ -197,11 +201,6 @@ export function useExport() {
 
           case 'webm': {
             const { formatWebm } = await import('../formatters/webm.ts');
-            const isAnimationExport = state.animation.enabled && state.animation.effects.length > 0
-              && (sourceInfo?.type !== 'video' || !sourceInfo.duration);
-            const effectiveFps = isAnimationExport
-              ? state.animation.fps
-              : settings.targetFPS * settings.playbackSpeed;
             const webmFrames = await getFrames(grid, state, setProgress);
             const blob = await formatWebm(webmFrames, {
               fps: effectiveFps,
@@ -217,11 +216,6 @@ export function useExport() {
             const { formatFrameSequence } = await import(
               '../formatters/frames.ts'
             );
-            const isAnimationExport = state.animation.enabled && state.animation.effects.length > 0
-              && (sourceInfo?.type !== 'video' || !sourceInfo.duration);
-            const effectiveFps = isAnimationExport
-              ? state.animation.fps
-              : settings.targetFPS * settings.playbackSpeed;
             const seqFrames = await getFrames(grid, state, setProgress);
             const blob = await formatFrameSequence(seqFrames, {
               format: extraOptions?.framesFormat ?? 'txt',
@@ -257,6 +251,7 @@ export function useExport() {
         const message =
           err instanceof Error ? err.message : 'Export failed';
         useAppStore.getState().addToast({ type: 'error', message });
+        setProgress(0);
       } finally {
         setIsExporting(false);
       }
@@ -266,11 +261,11 @@ export function useExport() {
 
   const copyToClipboard = useCallback(
     async (
-      format: 'txt' | 'ansi' | 'html',
+      format: 'txt' | 'ansi' | 'html' | 'markdown',
       extraOptions?: Partial<ExportOptions>,
     ) => {
       const state = useAppStore.getState();
-      const { renderResult, settings, cellSpacingX, cellSpacingY } = state;
+      const { renderResult, sourceInfo, settings, cellSpacingX, cellSpacingY } = state;
 
       if (!renderResult) return;
 
@@ -282,6 +277,15 @@ export function useExport() {
           text = formatPlaintext(grid, {
             cols: renderResult.width,
             rows: renderResult.height,
+          });
+          break;
+        case 'markdown':
+          text = formatMarkdownCodeBlock(grid, {
+            cols: renderResult.width,
+            rows: renderResult.height,
+            sourceFilename: sourceInfo?.filename,
+            charsetName: settings.charsetPreset,
+            modeName: settings.colorMode,
           });
           break;
         case 'ansi':
