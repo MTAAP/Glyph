@@ -1,6 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
-import type { AnimationContext, RGB } from '../types';
+import type { AnimationContext } from '../types';
 import { registerEffect } from '../registry';
+import { cloneCell } from '../utils';
 
 function applyScroll(
   grid: CharacterGrid,
@@ -36,11 +37,7 @@ function applyScroll(
       const src = grid[srcY]?.[srcX];
       if (!src) return { char: ' ' };
 
-      return {
-        char: src.char,
-        fg: src.fg ? ([...src.fg] as RGB) : undefined,
-        bg: src.bg ? ([...src.bg] as RGB) : undefined,
-      };
+      return cloneCell(src);
     }),
   );
 }

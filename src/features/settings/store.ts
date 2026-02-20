@@ -319,6 +319,18 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   openFilePicker: () => set((state) => ({ triggerFilePicker: (state.triggerFilePicker ?? 0) + 1 })),
 }), {
   name: 'glyph-settings',
+  version: 1,
+  migrate: (persisted: unknown, version: number) => {
+    if (version === 0) {
+      const state = persisted as { settings?: Record<string, unknown>; theme?: string };
+      if (state.settings) {
+        state.settings.saturation ??= 100;
+        state.settings.hueShift ??= 0;
+      }
+      return state;
+    }
+    return persisted;
+  },
   partialize: (state) => ({
     settings: state.settings,
     theme: state.theme,

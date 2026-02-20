@@ -25,9 +25,9 @@ export function useFullscreen(
     if (!isSupported) return;
 
     if (document.fullscreenElement) {
-      document.exitFullscreen();
+      document.exitFullscreen().catch(() => {/* browser denied */});
     } else {
-      targetRef.current?.requestFullscreen();
+      targetRef.current?.requestFullscreen().catch(() => {/* browser denied */});
     }
   }, [targetRef, isSupported]);
 

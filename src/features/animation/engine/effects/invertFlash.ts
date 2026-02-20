@@ -1,6 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext, RGB } from '../types';
 import { registerEffect } from '../registry';
+import { cloneCell } from '../utils';
 
 function applyInvertFlash(
   grid: CharacterGrid,
@@ -19,13 +20,7 @@ function applyInvertFlash(
 
   if (!isFlashing) {
     // Pass through unchanged (still clone to avoid mutation)
-    return grid.map((row) =>
-      row.map((cell) => ({
-        char: cell.char,
-        fg: cell.fg ? ([...cell.fg] as RGB) : undefined,
-        bg: cell.bg ? ([...cell.bg] as RGB) : undefined,
-      })),
-    );
+    return grid.map((row) => row.map(cloneCell));
   }
 
   // Invert: swap fg and bg colors

@@ -33,7 +33,12 @@ export function InputControls() {
   const triggerFilePicker = useAppStore((s) => s.triggerFilePicker);
 
   // Trigger file picker when openFilePicker is called from keyboard
+  const didMountFilePicker = useRef(false);
   useEffect(() => {
+    if (!didMountFilePicker.current) {
+      didMountFilePicker.current = true;
+      return;
+    }
     fileInputRef.current?.click();
   }, [triggerFilePicker]);
 

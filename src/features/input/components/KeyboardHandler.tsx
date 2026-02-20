@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { CHARSET_PRESETS } from '@/features/settings/presets';
+import { revokeActiveBlobUrl } from '@/features/input/hooks/useFileInput';
 import { useSidebarNavigation } from '@/features/settings/context/SidebarNavigationContext';
 
 export function KeyboardHandler() {
@@ -109,6 +110,7 @@ export function KeyboardHandler() {
           // Ignore when typing in input fields
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
+          revokeActiveBlobUrl();
           state.setSource(null, null, null);
           state.setSourceCanvas(null);
           state.setRenderResult(null);

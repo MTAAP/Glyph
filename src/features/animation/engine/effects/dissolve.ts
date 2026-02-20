@@ -1,7 +1,7 @@
 import type { CharacterGrid } from '@/shared/types';
 import type { AnimationContext } from '../types';
 import { registerEffect } from '../registry';
-import { seededRandom } from '../utils';
+import { seededRandom, cloneCell } from '../utils';
 
 function applyDissolve(
   grid: CharacterGrid,
@@ -22,11 +22,7 @@ function applyDissolve(
 
       if (threshold < progress) {
         // Cell is visible — pass through with original colors
-        return {
-          char: cell.char,
-          fg: cell.fg ? ([...cell.fg] as [number, number, number]) : undefined,
-          bg: cell.bg ? ([...cell.bg] as [number, number, number]) : undefined,
-        };
+        return cloneCell(cell);
       }
 
       // Cell is hidden — show as empty space

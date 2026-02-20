@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { useAppStore } from '@/features/settings/store';
 
 interface SourceOverlayProps {
@@ -12,10 +13,23 @@ interface SourceOverlayProps {
 export function SourceOverlay({ width, height }: SourceOverlayProps) {
   const sourceImage = useAppStore((s) => s.sourceImage);
   const sourceVideo = useAppStore((s) => s.sourceVideo);
+  const currentFrame = useAppStore((s) => s.currentFrame);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const src = sourceImage?.src ?? undefined;
-  // For video, we use the video element's poster or capture from the video
   const isVideo = sourceVideo !== null;
+
+  // Redraw video overlay canvas whenever the frame changes
+  useEffect(() => {
+    if (!isVideo || !sourceVideo || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    canvas.width = sourceVideo.videoWidth || width;
+    canvas.height = sourceVideo.videoHeight || height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(sourceVideo, 0, 0, canvas.width, canvas.height);
+    }
+  }, [isVideo, sourceVideo, currentFrame, width, height]);
 
   if (!src && !isVideo) return null;
 
@@ -34,16 +48,8 @@ export function SourceOverlay({ width, height }: SourceOverlayProps) {
       )}
       {isVideo && sourceVideo && (
         <canvas
-          ref={(canvas) => {
-            if (!canvas || !sourceVideo) return;
-            canvas.width = sourceVideo.videoWidth || width;
-            canvas.height = sourceVideo.videoHeight || height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(sourceVideo, 0, 0, canvas.width, canvas.height);
-            }
-          }}
-          style={{ width, height, objectFit: 'contain' }}
+          ref={canvasRef}
+          style={{ width, height }}
         />
       )}
     </div>

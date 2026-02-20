@@ -52,7 +52,11 @@ export function ExportBar() {
   const disabled = !renderResult || isExporting;
 
   const handleSelectFormat = (format: Format) => {
-    setSelectedFormat((prev) => (prev === format ? null : format));
+    setSelectedFormat((prev) => {
+      if (prev === format) return null;
+      setFormatOptions({});
+      return format;
+    });
   };
 
   const handleExport = () => {

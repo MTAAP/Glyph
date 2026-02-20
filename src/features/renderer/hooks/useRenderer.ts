@@ -143,6 +143,7 @@ export function useRenderer(): void {
 
       if (retriesRef.current < MAX_RETRIES) {
         retriesRef.current++;
+        workerRef.current?.terminate();
         workerRef.current = createRenderWorker();
         if (workerRef.current) {
           workerRef.current.onmessage = handleMessage;

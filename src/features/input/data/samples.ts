@@ -3,7 +3,6 @@ export interface SampleEntry {
   thumbnail: string;
   fullUrl: string;
   description: string;
-  bestPreset: string;
 }
 
 /**
@@ -17,41 +16,35 @@ export const SAMPLE_IMAGES: SampleEntry[] = [
     thumbnail: '/samples/portrait.jpg',
     fullUrl: '/samples/portrait.jpg',
     description: 'Human face — great for luminance mapping',
-    bestPreset: 'standard',
   },
   {
     name: 'Landscape',
     thumbnail: '/samples/landscape.jpg',
     fullUrl: '/samples/landscape.jpg',
     description: 'Nature scene with depth and tonal range',
-    bestPreset: 'standard',
   },
   {
     name: 'High Contrast',
     thumbnail: '/samples/high-contrast.jpg',
     fullUrl: '/samples/high-contrast.jpg',
     description: 'Bold graphic with sharp edges — ideal for edge detection',
-    bestPreset: 'blocks',
   },
   {
     name: 'Logo',
     thumbnail: '/samples/logo.png',
     fullUrl: '/samples/logo.png',
     description: 'Text and shapes — clean ASCII outlines',
-    bestPreset: 'standard',
   },
   {
     name: 'Pixel Art',
     thumbnail: '/samples/pixel-art.png',
     fullUrl: '/samples/pixel-art.png',
     description: 'Low-res sprite — try braille mode for detail',
-    bestPreset: 'braille',
   },
   {
     name: 'Photo',
     thumbnail: '/samples/photo.jpg',
     fullUrl: '/samples/photo.jpg',
     description: 'Full-color photograph — works with all color modes',
-    bestPreset: 'detailed',
   },
 ];

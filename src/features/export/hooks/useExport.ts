@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store.ts';
 import type { ExportOptions, CharacterGrid } from '@/shared/types/index.ts';
 import { formatPlaintext, formatMarkdownCodeBlock } from '../formatters/plaintext.ts';
@@ -102,17 +102,21 @@ async function getFrames(
 export function useExport() {
   const [isExporting, setIsExporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const exportingRef = useRef(false);
 
   const exportAs = useCallback(
     async (
       format: ExportOptions['format'],
       extraOptions?: Partial<ExportOptions>,
     ) => {
+      if (exportingRef.current) return;
+
       const state = useAppStore.getState();
       const { renderResult, sourceInfo, settings, cellSpacingX, cellSpacingY } = state;
 
       if (!renderResult) return;
 
+      exportingRef.current = true;
       setIsExporting(true);
       setProgress(0);
 
@@ -194,6 +198,12 @@ export function useExport() {
               cellSpacingX,
               cellSpacingY,
               onProgress: (p) => setProgress(80 + Math.round(p * 0.2)),
+              onLargeFrameWarning: (w) => {
+                useAppStore.getState().addToast({
+                  type: 'warning',
+                  message: `Large GIF: ${w.frameCount} frames (~${w.estimatedSizeMb} MB, ~${w.estimatedProcessingTimeSec}s to encode)`,
+                });
+              },
             });
             triggerDownload(blob, filename);
             break;
@@ -232,8 +242,7 @@ export function useExport() {
             const { formatAnimatedHtml } = await import(
               '@/features/animation/export/formatAnimatedHtml.ts'
             );
-            const animState = useAppStore.getState();
-            const html = formatAnimatedHtml(grid, animState.animation, {
+            const html = formatAnimatedHtml(grid, state.animation, {
               fontSize: extraOptions?.htmlFontSize,
               fontFamily: extraOptions?.htmlFontFamily,
               background: extraOptions?.htmlBackground,
@@ -247,12 +256,15 @@ export function useExport() {
         }
 
         setProgress(100);
+        // Brief delay so the user sees 100% before the bar disappears
+        await new Promise((r) => setTimeout(r, 400));
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Export failed';
         useAppStore.getState().addToast({ type: 'error', message });
         setProgress(0);
       } finally {
+        exportingRef.current = false;
         setIsExporting(false);
       }
     },

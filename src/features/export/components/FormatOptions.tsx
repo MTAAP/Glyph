@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { ExportOptions } from '@/shared/types/index.ts';
 import { cn } from '@/shared/utils/cn.ts';
 import { NavigableRadio } from '@/shared/ui/NavigableRadio.tsx';
@@ -43,6 +44,8 @@ export function FormatOptions({
   options,
   onChange,
 }: FormatOptionsProps) {
+  const savedPngBgRef = useRef('#1a1a1a');
+
   if (!selectedFormat) return null;
 
   const inputClass = cn(
@@ -135,20 +138,30 @@ export function FormatOptions({
             label="Background"
             value={
               options.pngBackground === 'transparent'
-                ? '#000000'
+                ? savedPngBgRef.current
                 : (options.pngBackground ?? '#1a1a1a')
             }
-            onChange={(v) => onChange({ ...options, pngBackground: v })}
+            onChange={(v) => {
+              savedPngBgRef.current = v;
+              if (options.pngBackground !== 'transparent') {
+                onChange({ ...options, pngBackground: v });
+              }
+            }}
           />
           <NavigableSwitch
             label="Transparent background"
             checked={options.pngBackground === 'transparent'}
-            onCheckedChange={(v) =>
-              onChange({
-                ...options,
-                pngBackground: v ? 'transparent' : '#1a1a1a',
-              })
-            }
+            onCheckedChange={(v) => {
+              if (v) {
+                const current = options.pngBackground;
+                if (current && current !== 'transparent') {
+                  savedPngBgRef.current = current;
+                }
+                onChange({ ...options, pngBackground: 'transparent' });
+              } else {
+                onChange({ ...options, pngBackground: savedPngBgRef.current });
+              }
+            }}
           />
         </div>
       );

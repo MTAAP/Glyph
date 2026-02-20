@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ScaleMode } from './usePreviewScale';
 
 const MIN_ZOOM = 0.25;
@@ -45,6 +45,12 @@ export function useZoom(): ZoomResult {
     panY: 0,
   });
 
+  // Track active drag listeners for cleanup on unmount
+  const dragCleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    return () => { dragCleanupRef.current?.(); };
+  }, []);
+
   const setFit = useCallback(() => {
     setState({ mode: 'fit', customScale: 1, panX: 0, panY: 0 });
   }, []);
@@ -70,16 +76,28 @@ export function useZoom(): ZoomResult {
   }, []);
 
   // Mouse wheel zoom (Ctrl+scroll or pinch via trackpad)
+  // Zooms toward cursor position by adjusting pan offset
   const onWheel = useCallback(
     (e: React.WheelEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
 
+      // Capture cursor position relative to the container
+      const rect = e.currentTarget.getBoundingClientRect();
+      const cursorX = e.clientX - rect.left;
+      const cursorY = e.clientY - rect.top;
+
       setState((prev) => {
-        const base = prev.mode === 'fit' ? 1 : prev.mode === '1:1' ? 1 : prev.customScale;
+        const oldScale = prev.mode === 'fit' ? 1 : prev.mode === '1:1' ? 1 : prev.customScale;
         const delta = -e.deltaY * WHEEL_ZOOM_FACTOR;
-        const newScale = clampScale(base + base * delta);
-        return { mode: 'custom', customScale: newScale, panX: prev.panX, panY: prev.panY };
+        const newScale = clampScale(oldScale + oldScale * delta);
+        const ratio = newScale / oldScale;
+
+        // Adjust pan so the point under the cursor stays fixed
+        const newPanX = cursorX - (cursorX - prev.panX) * ratio;
+        const newPanY = cursorY - (cursorY - prev.panY) * ratio;
+
+        return { mode: 'custom', customScale: newScale, panX: newPanX, panY: newPanY };
       });
     },
     [],
@@ -107,10 +125,12 @@ export function useZoom(): ZoomResult {
       const handleMouseUp = () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
+        dragCleanupRef.current = null;
       };
 
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
+      dragCleanupRef.current = handleMouseUp;
     },
     [state.mode, state.panX, state.panY],
   );

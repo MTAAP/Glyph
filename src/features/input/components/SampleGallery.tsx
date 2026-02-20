@@ -1,8 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { SAMPLE_IMAGES, type SampleEntry } from '../data/samples';
 
 function SampleCard({ sample, onSelect }: { sample: SampleEntry; onSelect: (sample: SampleEntry) => void }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <button
       type="button"
@@ -10,12 +12,17 @@ function SampleCard({ sample, onSelect }: { sample: SampleEntry; onSelect: (samp
       className="group flex flex-col items-center gap-2 rounded border border-neutral-700 bg-neutral-900/50 p-3 text-left transition-colors hover:border-neutral-500 hover:bg-neutral-800/50"
     >
       <div className="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-neutral-800">
-        <img
-          src={sample.thumbnail}
-          alt={sample.name}
-          className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
-          loading="lazy"
-        />
+        {imgError ? (
+          <span className="text-xs text-neutral-600 font-mono">[no preview]</span>
+        ) : (
+          <img
+            src={sample.thumbnail}
+            alt={sample.name}
+            className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
       <div className="w-full font-mono text-xs">
         <div className="text-neutral-200">{sample.name}</div>
@@ -27,6 +34,7 @@ function SampleCard({ sample, onSelect }: { sample: SampleEntry; onSelect: (samp
 
 export function SampleGallery() {
   const setSource = useAppStore((s) => s.setSource);
+  const addToast = useAppStore((s) => s.addToast);
 
   const handleSelect = useCallback(
     (sample: SampleEntry) => {
@@ -41,9 +49,12 @@ export function SampleGallery() {
           type: 'image',
         });
       };
+      img.onerror = () => {
+        addToast({ type: 'error', message: `Failed to load sample: ${sample.name}` });
+      };
       img.src = sample.fullUrl;
     },
-    [setSource],
+    [setSource, addToast],
   );
 
   return (
