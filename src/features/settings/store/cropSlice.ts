@@ -27,7 +27,8 @@ export const createCropSlice: StateCreator<
   setCropEnabled: (cropEnabled) => set((state) => {
     if (cropEnabled && !state.cropRect) {
       // Initialize with default crop on first enable
-      const rect = enforceAspectOnRect(DEFAULT_CROP, state.cropAspectRatio);
+      const imageAspect = state.sourceInfo ? state.sourceInfo.width / state.sourceInfo.height : 1;
+      const rect = enforceAspectOnRect(DEFAULT_CROP, state.cropAspectRatio, imageAspect);
       return { cropEnabled: true, cropRect: rect };
     }
     // Keep cropRect when disabling so it's remembered on re-enable
@@ -36,7 +37,8 @@ export const createCropSlice: StateCreator<
   setCropRect: (cropRect) => set({ cropRect }),
   setCropAspectRatio: (cropAspectRatio) => set((state) => {
     if (state.cropRect && cropAspectRatio !== 'free') {
-      return { cropAspectRatio, cropRect: enforceAspectOnRect(state.cropRect, cropAspectRatio) };
+      const imageAspect = state.sourceInfo ? state.sourceInfo.width / state.sourceInfo.height : 1;
+      return { cropAspectRatio, cropRect: enforceAspectOnRect(state.cropRect, cropAspectRatio, imageAspect) };
     }
     return { cropAspectRatio };
   }),
