@@ -1,46 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '@/features/settings/store';
 
 export function useVideoFrames(): void {
   const rafRef = useRef<number>(0);
   const lastFrameTimeRef = useRef(0);
 
-  useEffect(() => {
-    const unsubscribe = useAppStore.subscribe(
-      (state, prev) => {
-        if (state.sourceVideo !== prev.sourceVideo && state.sourceVideo && state.sourceInfo?.duration) {
-          const duration = state.sourceInfo.duration;
-          const targetFPS = state.settings.targetFPS;
-          const totalFrames = Math.ceil(duration * targetFPS);
-          useAppStore.getState().setTotalFrames(totalFrames);
-        }
-      },
-    );
-
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = useAppStore.subscribe(
-      (state, prev) => {
-        const startedPlaying = state.isPlaying && !prev.isPlaying;
-        const stoppedPlaying = !state.isPlaying && prev.isPlaying;
-
-        if (startedPlaying) {
-          startPlayback();
-        } else if (stoppedPlaying) {
-          stopPlayback();
-        }
-      },
-    );
-
-    return () => {
-      unsubscribe();
-      stopPlayback();
-    };
-  }, []);
-
-  function startPlayback() {
+  const startPlayback = useCallback(() => {
     lastFrameTimeRef.current = 0;
 
     function tick(timestamp: number) {
@@ -111,12 +76,47 @@ export function useVideoFrames(): void {
     }
 
     rafRef.current = requestAnimationFrame(tick);
-  }
+  }, []);
 
-  function stopPlayback() {
+  const stopPlayback = useCallback(() => {
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = useAppStore.subscribe(
+      (state, prev) => {
+        if (state.sourceVideo !== prev.sourceVideo && state.sourceVideo && state.sourceInfo?.duration) {
+          const duration = state.sourceInfo.duration;
+          const targetFPS = state.settings.targetFPS;
+          const totalFrames = Math.ceil(duration * targetFPS);
+          useAppStore.getState().setTotalFrames(totalFrames);
+        }
+      },
+    );
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = useAppStore.subscribe(
+      (state, prev) => {
+        const startedPlaying = state.isPlaying && !prev.isPlaying;
+        const stoppedPlaying = !state.isPlaying && prev.isPlaying;
+
+        if (startedPlaying) {
+          startPlayback();
+        } else if (stoppedPlaying) {
+          stopPlayback();
+        }
+      },
+    );
+
+    return () => {
+      unsubscribe();
+      stopPlayback();
+    };
+  }, [startPlayback, stopPlayback]);
 }

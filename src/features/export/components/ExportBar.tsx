@@ -29,6 +29,7 @@ const FORMAT_BUTTONS: {
   { format: 'txt', label: 'TXT', icon: FileText, copyable: true },
   { format: 'ansi', label: 'ANSI', icon: Terminal, copyable: true },
   { format: 'html', label: 'HTML', icon: Code, copyable: true },
+  { format: 'svg', label: 'SVG', icon: Code },
   { format: 'png', label: 'PNG', icon: Image },
   { format: 'gif', label: 'GIF', icon: Film, animatedOnly: true },
   { format: 'webm', label: 'WebM', icon: Video, animatedOnly: true },

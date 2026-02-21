@@ -5,7 +5,10 @@ import { NavigableSwitch } from '@/shared/ui/NavigableSwitch';
 
 export function VideoControls() {
   const sourceInfo = useAppStore((s) => s.sourceInfo);
-  const settings = useAppStore((s) => s.settings);
+  const targetFPS = useAppStore((s) => s.settings.targetFPS);
+  const playbackSpeed = useAppStore((s) => s.settings.playbackSpeed);
+  const frameRange = useAppStore((s) => s.settings.frameRange);
+  const loop = useAppStore((s) => s.settings.loop);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const currentFrame = useAppStore((s) => s.currentFrame);
   const totalFrames = useAppStore((s) => s.totalFrames);
@@ -16,7 +19,7 @@ export function VideoControls() {
     <div className="space-y-3">
       <NavigableSlider
         label="Target FPS"
-        value={settings.targetFPS}
+        value={targetFPS}
         onValueChange={(v) => updateSettings({ targetFPS: v })}
         min={1}
         max={30}
@@ -25,7 +28,7 @@ export function VideoControls() {
 
       <NavigableSlider
         label="Playback Speed"
-        value={settings.playbackSpeed}
+        value={playbackSpeed}
         onValueChange={(v) => updateSettings({ playbackSpeed: v })}
         min={0.25}
         max={4}
@@ -38,11 +41,11 @@ export function VideoControls() {
         <div className="flex items-center justify-between">
           <span className="text-xs">Frame Range</span>
           <span className="text-xs text-muted-foreground tabular-nums">
-            {settings.frameRange[0]}% &ndash; {settings.frameRange[1]}%
+            {frameRange[0]}% &ndash; {frameRange[1]}%
           </span>
         </div>
         <Slider.Root
-          value={[settings.frameRange[0], settings.frameRange[1]]}
+          value={[frameRange[0], frameRange[1]]}
           onValueChange={([start, end]) =>
             updateSettings({ frameRange: [start, end] })
           }
@@ -62,7 +65,7 @@ export function VideoControls() {
 
       <NavigableSwitch
         label="Loop"
-        checked={settings.loop}
+        checked={loop}
         onCheckedChange={(v) => updateSettings({ loop: v })}
       />
 

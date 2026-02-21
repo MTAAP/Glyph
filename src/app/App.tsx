@@ -9,13 +9,16 @@ import { ToastContainer } from '@/shared/ui/Toast';
 import { FormatModal } from '@/shared/ui/FormatModal';
 import { ClipboardHandler } from '@/features/input/components/ClipboardHandler';
 import { KeyboardHandler } from '@/features/input/components/KeyboardHandler';
-import { SidebarNavigationProvider } from '@/features/settings/context/SidebarNavigationContext';
+import { SidebarNavigationProvider } from '@/features/settings/SidebarNavigationProvider';
 import { useAppStore } from '@/features/settings/store';
+import { useUrlParams } from '@/features/settings/hooks/useUrlParams';
 
 function AppContent() {
   const formatModalOpen = useAppStore((s) => s.formatModalOpen);
   const formatModalMode = useAppStore((s) => s.formatModalMode);
   const setFormatModalOpen = useAppStore((s) => s.setFormatModalOpen);
+
+  useUrlParams();
 
   return (
     <ThemeProvider>

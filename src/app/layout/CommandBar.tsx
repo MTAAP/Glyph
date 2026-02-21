@@ -12,7 +12,7 @@ export function CommandBar() {
   const sourceInfo = useAppStore((s) => s.sourceInfo);
   const currentFrame = useAppStore((s) => s.currentFrame);
   const totalFrames = useAppStore((s) => s.totalFrames);
-  const settings = useAppStore((s) => s.settings);
+  const targetFPS = useAppStore((s) => s.settings.targetFPS);
 
   const isVideo = sourceInfo?.type === 'video';
   const hasResult = renderResult !== null;
@@ -54,7 +54,7 @@ export function CommandBar() {
         <span>{renderTime}</span>
         {isVideo && (
           <>
-            <span>{settings.targetFPS}fps</span>
+            <span>{targetFPS}fps</span>
             <span>
               {currentFrame}/{totalFrames}
             </span>

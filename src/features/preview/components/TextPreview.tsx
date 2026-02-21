@@ -29,7 +29,9 @@ export function TextPreview({
   scaleMode?: ScaleMode;
   customScale?: number;
 }) {
-  const settings = useAppStore((s) => s.settings);
+  const colorMode = useAppStore((s) => s.settings.colorMode);
+  const monoFgColor = useAppStore((s) => s.settings.monoFgColor);
+  const monoBgColor = useAppStore((s) => s.settings.monoBgColor);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
   const cellSpacingY = useAppStore((s) => s.cellSpacingY);
 
@@ -47,14 +49,14 @@ export function TextPreview({
       letterSpacing: `${charWidth * (cellSpacingX - 1)}px`,
     };
 
-    if (settings.colorMode === 'mono') {
+    if (colorMode === 'mono') {
       return (
         <pre
           className="font-mono whitespace-pre select-all"
           style={{
             fontSize: FONT_SIZE,
             ...spacingStyle,
-            color: settings.monoFgColor,
+            color: monoFgColor,
           }}
         >
           {grid.map((row, y) => (
@@ -66,7 +68,7 @@ export function TextPreview({
       );
     }
 
-    if (settings.colorMode === 'foreground') {
+    if (colorMode === 'foreground') {
       return (
         <pre
           className="font-mono whitespace-pre select-all"
@@ -113,12 +115,12 @@ export function TextPreview({
         ))}
       </pre>
     );
-  }, [grid, settings.colorMode, settings.monoFgColor, charWidth, cellSpacingX, cellSpacingY]);
+  }, [grid, colorMode, monoFgColor, charWidth, cellSpacingX, cellSpacingY]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;
 
-  const bgColor = settings.colorMode === 'mono' ? settings.monoBgColor : undefined;
+  const bgColor = colorMode === 'mono' ? monoBgColor : undefined;
 
   return (
     <div style={{ width: scaledWidth, height: scaledHeight, overflow: 'hidden', backgroundColor: bgColor }}>

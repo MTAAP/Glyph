@@ -22,8 +22,7 @@ export function KeyboardHandler() {
         target.tagName === 'TEXTAREA' ||
         (target.tagName === 'INPUT' && (inputType === 'text' || inputType === 'url' || inputType === 'number'));
 
-      // Check if a select dropdown is open
-      const isSelectOpen = !!document.querySelector('[data-radix-select-content]');
+      const isPopupOpen = target.getAttribute('aria-expanded') === 'true' || target.closest('[role="listbox"], [role="menu"], [role="dialog"], [role="menuitem"]');
 
       const state = useAppStore.getState();
       const isInSidebar = target.closest('aside');
@@ -39,9 +38,9 @@ export function KeyboardHandler() {
       }
 
       switch (e.key) {
-        case 'ArrowUp': {
-          // Don't intercept when Radix select is open
-          if (isSelectOpen) return;
+          case 'ArrowUp': {
+          // Don't intercept when a popup/menu is open
+          if (isPopupOpen) return;
 
           if (isInSidebar) {
             e.preventDefault();
@@ -50,8 +49,8 @@ export function KeyboardHandler() {
           break;
         }
         case 'ArrowDown': {
-          // Don't intercept when Radix select is open
-          if (isSelectOpen) return;
+          // Don't intercept when a popup/menu is open
+          if (isPopupOpen) return;
 
           if (isInSidebar) {
             e.preventDefault();
@@ -92,6 +91,9 @@ export function KeyboardHandler() {
         case ' ': {
           // Ignore when typing in input fields
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+          // Don't intercept Space for Select triggers so they can open natively
+          if (target.getAttribute('role') === 'combobox') return;
 
           // When in sidebar with focus, trigger button action
           if (isInSidebar && nav.focusedIndex !== null) {
@@ -155,11 +157,7 @@ export function KeyboardHandler() {
         case 'f':
         case 'F': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-          // Toggle fullscreen via window-exposed function
-          const toggleFs = (window as unknown as Record<string, unknown>).__glyphFullscreenToggle;
-          if (typeof toggleFs === 'function') {
-            (toggleFs as () => void)();
-          }
+          state.callbacks.toggleFullscreen?.();
           break;
         }
         case 'i':
@@ -171,11 +169,7 @@ export function KeyboardHandler() {
         case 'o':
         case 'O': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-          // Toggle source overlay via window-exposed function
-          const toggleOverlay = (window as unknown as Record<string, unknown>).__glyphOverlayToggle;
-          if (typeof toggleOverlay === 'function') {
-            (toggleOverlay as () => void)();
-          }
+          state.callbacks.toggleOverlay?.();
           break;
         }
         case 't':
@@ -190,28 +184,19 @@ export function KeyboardHandler() {
         case '=': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
           e.preventDefault();
-          const zoomInFn = (window as unknown as Record<string, unknown>).__glyphZoomIn;
-          if (typeof zoomInFn === 'function') {
-            (zoomInFn as () => void)();
-          }
+          state.callbacks.zoomIn?.();
           break;
         }
         case '-': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
           e.preventDefault();
-          const zoomOutFn = (window as unknown as Record<string, unknown>).__glyphZoomOut;
-          if (typeof zoomOutFn === 'function') {
-            (zoomOutFn as () => void)();
-          }
+          state.callbacks.zoomOut?.();
           break;
         }
         case '0': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
           e.preventDefault();
-          const zoomFitFn = (window as unknown as Record<string, unknown>).__glyphZoomFit;
-          if (typeof zoomFitFn === 'function') {
-            (zoomFitFn as () => void)();
-          }
+          state.callbacks.zoomFit?.();
           break;
         }
       }

@@ -25,7 +25,7 @@ export function Canvas() {
   const sourceInfo = useAppStore((s) => s.sourceInfo);
   const renderResult = useAppStore((s) => s.renderResult);
   const isRendering = useAppStore((s) => s.isRendering);
-  const settings = useAppStore((s) => s.settings);
+  const colorMode = useAppStore((s) => s.settings.colorMode);
   const cropEnabled = useAppStore((s) => s.cropEnabled);
 
   const [overlayActive, setOverlayActive] = useState(false);
@@ -33,7 +33,7 @@ export function Canvas() {
   const hasSource = sourceInfo !== null;
   const displayGrid = animatedGrid ?? renderResult?.grid ?? null;
   const showCrop = cropEnabled && hasSource;
-  const useCanvasRenderer = settings.colorMode !== 'mono';
+  const useCanvasRenderer = colorMode !== 'mono';
 
   // Zoom state management -- actual scale computation happens in preview components via usePreviewScale
   const zoom = useZoom();
@@ -41,20 +41,23 @@ export function Canvas() {
 
   const toggleOverlay = useCallback(() => setOverlayActive((prev) => !prev), []);
 
-  // Expose toggle functions on window for keyboard handler access
+  // Register callbacks for keyboard handler access
   useEffect(() => {
-    const w = window as unknown as Record<string, unknown>;
-    w.__glyphFullscreenToggle = fullscreen.toggle;
-    w.__glyphOverlayToggle = toggleOverlay;
-    w.__glyphZoomIn = zoom.zoomIn;
-    w.__glyphZoomOut = zoom.zoomOut;
-    w.__glyphZoomFit = zoom.setFit;
+    useAppStore.getState().setCallbacks({
+      toggleFullscreen: fullscreen.toggle,
+      toggleOverlay,
+      zoomIn: zoom.zoomIn,
+      zoomOut: zoom.zoomOut,
+      zoomFit: zoom.setFit,
+    });
     return () => {
-      delete w.__glyphFullscreenToggle;
-      delete w.__glyphOverlayToggle;
-      delete w.__glyphZoomIn;
-      delete w.__glyphZoomOut;
-      delete w.__glyphZoomFit;
+      useAppStore.getState().setCallbacks({
+        toggleFullscreen: undefined,
+        toggleOverlay: undefined,
+        zoomIn: undefined,
+        zoomOut: undefined,
+        zoomFit: undefined,
+      });
     };
   }, [fullscreen.toggle, toggleOverlay, zoom.zoomIn, zoom.zoomOut, zoom.setFit]);
 
@@ -69,7 +72,7 @@ export function Canvas() {
         (fullscreen.isFullscreen ? ' bg-background' : '')
       }
     >
-      <DragDrop containerRef={containerRef} />
+      <DragDrop />
 
       <ZoomControls
         mode={zoom.mode}
