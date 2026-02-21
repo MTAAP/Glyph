@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
 import { Logo } from '@/shared/ui/Logo';
@@ -80,7 +80,7 @@ export function Header() {
 
   const themeLabel = theme === 'light' ? 'LIGHT' : theme === 'dark' ? 'DARK' : 'AUTO';
 
-  const shareSettings = async () => {
+  const shareSettings = useCallback(async () => {
     const state = useAppStore.getState();
     const settingsJson = JSON.stringify(state.settings);
     const encoded = btoa(settingsJson);
@@ -93,7 +93,18 @@ export function Header() {
     } catch {
       useAppStore.getState().addToast({ type: 'error', message: 'Failed to copy share link' });
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    useAppStore.getState().setCallbacks({
+      shareSettings,
+    });
+    return () => {
+      useAppStore.getState().setCallbacks({
+        shareSettings: undefined,
+      });
+    };
+  }, [shareSettings]);
 
   return (
     <>

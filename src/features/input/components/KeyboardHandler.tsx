@@ -28,17 +28,27 @@ export function KeyboardHandler() {
       const isInSidebar = target.closest('aside');
       const nav = navRef.current;
 
-      // Ctrl+S / Cmd+S: download in default format
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (state.renderResult) {
-          state.setFormatModalOpen(true, 'export');
-        }
-        return;
-      }
-
       switch (e.key) {
-          case 'ArrowUp': {
+        case 's':
+        case 'S': {
+          // Ignore when typing in input fields
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+          // Ctrl+S / Cmd+S: download in default format
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (state.renderResult) {
+              state.setFormatModalOpen(true, 'export');
+            }
+          } else {
+            // Unmodified 's': share settings
+            e.preventDefault();
+            state.callbacks.shareSettings?.();
+          }
+          break;
+        }
+
+        case 'ArrowUp': {
           // Don't intercept when a popup/menu is open
           if (isPopupOpen) return;
 

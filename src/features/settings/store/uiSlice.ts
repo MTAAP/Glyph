@@ -26,6 +26,7 @@ export interface UiSlice {
     zoomIn?: () => void;
     zoomOut?: () => void;
     zoomFit?: () => void;
+    shareSettings?: () => void;
   };
 
   setCallbacks: (callbacks: Partial<UiSlice['callbacks']>) => void;
