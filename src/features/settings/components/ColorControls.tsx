@@ -29,7 +29,10 @@ const MONO_PALETTES: { name: string; fg: string; bg: string }[] = [
 ];
 
 export function ColorControls() {
-  const settings = useAppStore((s) => s.settings);
+  const colorMode = useAppStore((s) => s.settings.colorMode);
+  const colorDepth = useAppStore((s) => s.settings.colorDepth);
+  const monoFgColor = useAppStore((s) => s.settings.monoFgColor);
+  const monoBgColor = useAppStore((s) => s.settings.monoBgColor);
   const updateSettings = useAppStore((s) => s.updateSettings);
 
   const applyPalette = (fg: string, bg: string) => {
@@ -39,14 +42,14 @@ export function ColorControls() {
   return (
     <div className="space-y-3">
       <NavigableSegmented
-        value={settings.colorMode}
+        value={colorMode}
         onValueChange={(v) => updateSettings({ colorMode: v })}
         options={COLOR_MODES}
       />
 
       <NavigableSelect
         label="Color Quantization"
-        value={String(settings.colorDepth)}
+        value={String(colorDepth)}
         onValueChange={(v) => {
           const depth = v === 'truecolor' ? 'truecolor' : (parseInt(v, 10) as 8 | 16 | 256);
           updateSettings({ colorDepth: depth });
@@ -54,13 +57,13 @@ export function ColorControls() {
         options={COLOR_DEPTHS}
       />
 
-      {settings.colorMode === 'mono' && (
+      {colorMode === 'mono' && (
         <>
           <div className="space-y-1.5">
             <span className="text-xs">Palette</span>
             <div className="flex gap-1 flex-wrap">
               {MONO_PALETTES.map((palette) => {
-                const isActive = settings.monoFgColor === palette.fg && settings.monoBgColor === palette.bg;
+                const isActive = monoFgColor === palette.fg && monoBgColor === palette.bg;
                 return (
                   <button
                     key={palette.name}
@@ -90,12 +93,12 @@ export function ColorControls() {
           <div className="flex justify-center gap-4">
             <NavigableColorInput
               label="FG"
-              value={settings.monoFgColor}
+              value={monoFgColor}
               onChange={(v) => updateSettings({ monoFgColor: v })}
             />
             <NavigableColorInput
               label="BG"
-              value={settings.monoBgColor}
+              value={monoBgColor}
               onChange={(v) => updateSettings({ monoBgColor: v })}
             />
           </div>

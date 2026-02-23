@@ -1,0 +1,118 @@
+import type { CharacterGrid } from '@/shared/types/index.ts';
+
+interface SvgOptions {
+  fontSize?: number;
+  fontFamily?: string;
+  background?: string | 'transparent';
+  cellSpacingX?: number;
+  cellSpacingY?: number;
+}
+
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+export function formatSvg(
+  grid: CharacterGrid,
+  options: SvgOptions = {},
+): string {
+  const fontSize = options.fontSize ?? 14;
+  const fontFamily = options.fontFamily ?? 'monospace';
+  const background = options.background ?? '#1a1a1a';
+  const spX = options.cellSpacingX ?? 1.0;
+  const spY = options.cellSpacingY ?? 1.0;
+
+  // Approximate character metrics
+  const charWidth = fontSize * 0.6 * spX;
+  const charHeight = fontSize * 1.2 * spY;
+  
+  const cols = grid[0]?.length ?? 0;
+  const rows = grid.length;
+  
+  const width = cols * charWidth;
+  const height = rows * charHeight;
+
+  let svgContent = '';
+
+  // Backgrounds
+  for (let y = 0; y < rows; y++) {
+    const row = grid[y];
+    let startX = -1;
+    let currentColor: string | null = null;
+    let currentLength = 0;
+
+    for (let x = 0; x < cols; x++) {
+      const cell = row[x];
+      const bgColor = cell.bg ? `rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})` : null;
+
+      if (bgColor !== currentColor) {
+        if (currentColor !== null && startX !== -1) {
+          svgContent += `<rect x="${(startX * charWidth).toFixed(1)}" y="${(y * charHeight).toFixed(1)}" width="${(currentLength * charWidth).toFixed(1)}" height="${charHeight.toFixed(1)}" fill="${currentColor}" />\n`;
+        }
+        currentColor = bgColor;
+        startX = x;
+        currentLength = 1;
+      } else {
+        currentLength++;
+      }
+    }
+    
+    if (currentColor !== null && startX !== -1) {
+      svgContent += `<rect x="${(startX * charWidth).toFixed(1)}" y="${(y * charHeight).toFixed(1)}" width="${(currentLength * charWidth).toFixed(1)}" height="${charHeight.toFixed(1)}" fill="${currentColor}" />\n`;
+    }
+  }
+
+  // Foregrounds
+  // SVG text rendering baseline is bottom, we need to adjust Y
+  const textBaselineOffset = charHeight * 0.75;
+  
+  for (let y = 0; y < rows; y++) {
+    const row = grid[y];
+    let startX = -1;
+    let currentColor: string | null = null;
+    let currentText = '';
+
+    for (let x = 0; x < cols; x++) {
+      const cell = row[x];
+      // Skip empty space if it has no color, or default to generic fill
+      const fgColor = cell.fg ? `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})` : '#e0e0e0';
+
+      if (fgColor !== currentColor) {
+        if (currentColor !== null && startX !== -1 && currentText.trim() !== '') {
+          // preserve spaces via xml:space="preserve"
+          svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${currentColor}" xml:space="preserve">${escapeXml(currentText)}</text>\n`;
+        }
+        currentColor = fgColor;
+        startX = x;
+        currentText = cell.char;
+      } else {
+        currentText += cell.char;
+      }
+    }
+
+    if (currentColor !== null && startX !== -1 && currentText.trim() !== '') {
+      svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${currentColor}" xml:space="preserve">${escapeXml(currentText)}</text>\n`;
+    }
+  }
+
+  const bgRect = background !== 'transparent' 
+    ? `<rect width="100%" height="100%" fill="${background}" />` 
+    : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width.toFixed(1)} ${height.toFixed(1)}" width="${width.toFixed(1)}" height="${height.toFixed(1)}">
+  <style>
+    text {
+      font-family: ${fontFamily};
+      font-size: ${fontSize}px;
+      letter-spacing: ${(fontSize * 0.6 * (spX - 1)).toFixed(2)}px;
+    }
+  </style>
+  ${bgRect}
+  ${svgContent}
+</svg>`;
+}

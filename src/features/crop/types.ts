@@ -32,7 +32,7 @@ export function aspectRatioValue(preset: AspectRatioPreset): number | null {
 }
 
 /** Adjust a crop rect to match the given aspect ratio, keeping the center */
-export function enforceAspectOnRect(rect: CropRect, preset: AspectRatioPreset): CropRect {
+export function enforceAspectOnRect(rect: CropRect, preset: AspectRatioPreset, imageAspect: number): CropRect {
   const r = aspectRatioValue(preset);
   if (!r) return rect;
 
@@ -40,16 +40,26 @@ export function enforceAspectOnRect(rect: CropRect, preset: AspectRatioPreset): 
   const cy = rect.y + rect.height / 2;
 
   let w = rect.width;
-  let h = w / r;
+  let h = w * imageAspect / r;
 
   // Shrink to fit within 0-1 bounds
-  if (h > 1) { h = 1; w = h * r; }
-  if (w > 1) { w = 1; h = w / r; }
+  if (h > 1) { 
+    h = 1; 
+    w = h * r / imageAspect; 
+  }
+  if (w > 1) { 
+    w = 1; 
+    h = w * imageAspect / r; 
+  }
 
   let x = cx - w / 2;
   let y = cy - h / 2;
-  x = Math.max(0, Math.min(x, 1 - w));
-  y = Math.max(0, Math.min(y, 1 - h));
+  
+  // Clamp back into 0-1 bounds
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
+  if (x + w > 1) x = 1 - w;
+  if (y + h > 1) y = 1 - h;
 
   return { x, y, width: w, height: h };
 }

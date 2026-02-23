@@ -29,6 +29,7 @@ function filenameForFormat(
     txt: '.txt',
     ansi: '.ans',
     html: '.html',
+    svg: '.svg',
     png: '.png',
     gif: '.gif',
     webm: '.webm',
@@ -168,6 +169,20 @@ export function useExport() {
               cellSpacingY,
             });
             const blob = new Blob([text], { type: 'text/html' });
+            triggerDownload(blob, filename);
+            break;
+          }
+
+          case 'svg': {
+            const { formatSvg } = await import('../formatters/svg.ts');
+            const svg = formatSvg(grid, {
+              fontSize: extraOptions?.svgFontSize,
+              fontFamily: extraOptions?.svgFontFamily,
+              background: extraOptions?.svgBackground,
+              cellSpacingX,
+              cellSpacingY,
+            });
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
             triggerDownload(blob, filename);
             break;
           }

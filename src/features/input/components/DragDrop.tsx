@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type RefObject } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { processFile } from '@/features/input/hooks/useFileInput';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
@@ -8,7 +8,7 @@ const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg'];
 const ACCEPTED_TYPES = [...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES];
 const MAX_WARN_SIZE = 200 * 1024 * 1024; // 200 MB
 
-export function DragDrop({ containerRef: _containerRef }: { containerRef: RefObject<HTMLDivElement | null> }) {
+export function DragDrop() {
   const [isDragging, setIsDragging] = useState(false);
   const dragCountRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);

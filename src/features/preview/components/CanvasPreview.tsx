@@ -28,7 +28,8 @@ export function CanvasPreview({
   customScale?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const settings = useAppStore((s) => s.settings);
+  const colorMode = useAppStore((s) => s.settings.colorMode);
+  const monoFgColor = useAppStore((s) => s.settings.monoFgColor);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
   const cellSpacingY = useAppStore((s) => s.cellSpacingY);
 
@@ -56,8 +57,8 @@ export function CanvasPreview({
     ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
     ctx.textBaseline = 'top';
 
-    // Clear
-    ctx.clearRect(0, 0, width, height);
+    const bgGroups = new Map<string, { px: number; py: number }[]>();
+    const fgGroups = new Map<string, { char: string; px: number; py: number }[]>();
 
     for (let y = 0; y < rows; y++) {
       const row = grid[y];
@@ -66,24 +67,56 @@ export function CanvasPreview({
         const px = x * cellPitchX;
         const py = y * cellPitchY;
 
-        // Background
+        // Group background rects by color
         if (cell.bg) {
-          ctx.fillStyle = `rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`;
-          ctx.fillRect(px, py, cellPitchX, cellPitchY);
+          const colorStr = `rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`;
+          let list = bgGroups.get(colorStr);
+          if (!list) {
+            list = [];
+            bgGroups.set(colorStr, list);
+          }
+          list.push({ px, py });
         }
 
-        // Foreground
-        if (cell.fg) {
-          ctx.fillStyle = `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})`;
-        } else if (settings.colorMode === 'mono') {
-          ctx.fillStyle = settings.monoFgColor;
-        } else {
-          ctx.fillStyle = '#e0e0e0';
+        // Group foreground characters by color (skip whitespace)
+        if (cell.char !== ' ' && cell.char !== '') {
+          let colorStr = '#e0e0e0';
+          if (cell.fg) {
+            colorStr = `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})`;
+          } else if (colorMode === 'mono') {
+            colorStr = monoFgColor;
+          }
+          let list = fgGroups.get(colorStr);
+          if (!list) {
+            list = [];
+            fgGroups.set(colorStr, list);
+          }
+          list.push({ char: cell.char, px, py });
         }
-        ctx.fillText(cell.char, px, py);
       }
     }
-  }, [grid, cellPitchX, cellPitchY, settings.colorMode, settings.monoFgColor]);
+
+    // Clear
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw backgrounds in batches
+    for (const [color, rects] of bgGroups.entries()) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (const { px, py } of rects) {
+        ctx.rect(px, py, cellPitchX, cellPitchY);
+      }
+      ctx.fill();
+    }
+
+    // Draw foregrounds in batches
+    for (const [color, items] of fgGroups.entries()) {
+      ctx.fillStyle = color;
+      for (const { char, px, py } of items) {
+        ctx.fillText(char, px, py);
+      }
+    }
+  }, [grid, cellPitchX, cellPitchY, colorMode, monoFgColor]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;

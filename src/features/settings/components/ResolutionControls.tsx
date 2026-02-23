@@ -4,7 +4,9 @@ import { NavigableSlider } from '@/shared/ui/NavigableSlider';
 import { NavigableSwitch } from '@/shared/ui/NavigableSwitch';
 
 export function ResolutionControls() {
-  const settings = useAppStore((s) => s.settings);
+  const outputWidth = useAppStore((s) => s.settings.outputWidth);
+  const aspectRatioCorrection = useAppStore((s) => s.settings.aspectRatioCorrection);
+  const lockAspectRatio = useAppStore((s) => s.settings.lockAspectRatio);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const sourceInfo = useAppStore((s) => s.sourceInfo);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
@@ -15,9 +17,9 @@ export function ResolutionControls() {
 
   const computedHeight = sourceInfo
     ? Math.round(
-        (settings.outputWidth / sourceInfo.width) *
+        (outputWidth / sourceInfo.width) *
           sourceInfo.height *
-          settings.aspectRatioCorrection,
+          aspectRatioCorrection,
       )
     : null;
 
@@ -25,7 +27,7 @@ export function ResolutionControls() {
     <div className="space-y-3">
       <NavigableSlider
         label="Output Width"
-        value={settings.outputWidth}
+        value={outputWidth}
         onValueChange={(v) => updateSettings({ outputWidth: v })}
         min={100}
         max={600}
@@ -34,7 +36,7 @@ export function ResolutionControls() {
 
       <NavigableSlider
         label="Aspect Ratio Correction"
-        value={settings.aspectRatioCorrection}
+        value={aspectRatioCorrection}
         onValueChange={(v) => updateSettings({ aspectRatioCorrection: v })}
         min={0.3}
         max={1.0}
@@ -44,7 +46,7 @@ export function ResolutionControls() {
 
       <NavigableSwitch
         label="Lock Aspect Ratio"
-        checked={settings.lockAspectRatio}
+        checked={lockAspectRatio}
         onCheckedChange={(v) => updateSettings({ lockAspectRatio: v })}
       />
 
@@ -114,7 +116,7 @@ export function ResolutionControls() {
 
       {sourceInfo && computedHeight !== null && (
         <p className="text-xs text-muted-foreground">
-          Output: {settings.outputWidth} &times; {computedHeight} characters
+          Output: {outputWidth} &times; {computedHeight} characters
         </p>
       )}
     </div>

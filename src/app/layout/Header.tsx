@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { cn } from '@/shared/utils/cn';
 import { Logo } from '@/shared/ui/Logo';
@@ -67,6 +67,11 @@ export function Header() {
   const setTheme = useAppStore((s) => s.setTheme);
   const [aboutOpen, setAboutOpen] = useState(false);
 
+  const undoSettings = useAppStore((s) => s.undoSettings);
+  const redoSettings = useAppStore((s) => s.redoSettings);
+  const canUndo = useAppStore((s) => s.settingsHistoryIndex > 0);
+  const canRedo = useAppStore((s) => s.settingsHistoryIndex < s.settingsHistory.length - 1);
+
   const cycleTheme = () => {
     const order: Array<'system' | 'light' | 'dark'> = ['system', 'light', 'dark'];
     const idx = order.indexOf(theme);
@@ -75,11 +80,74 @@ export function Header() {
 
   const themeLabel = theme === 'light' ? 'LIGHT' : theme === 'dark' ? 'DARK' : 'AUTO';
 
+  const shareSettings = useCallback(async () => {
+    const state = useAppStore.getState();
+    const settingsJson = JSON.stringify(state.settings);
+    const encoded = btoa(settingsJson);
+    const url = new URL(window.location.href);
+    url.searchParams.set('settings', encoded);
+    
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      useAppStore.getState().addToast({ type: 'info', message: 'Share link copied to clipboard' });
+    } catch {
+      useAppStore.getState().addToast({ type: 'error', message: 'Failed to copy share link' });
+    }
+  }, []);
+
+  useEffect(() => {
+    useAppStore.getState().setCallbacks({
+      shareSettings,
+    });
+    return () => {
+      useAppStore.getState().setCallbacks({
+        shareSettings: undefined,
+      });
+    };
+  }, [shareSettings]);
+
   return (
     <>
       <header className="h-12 flex items-center justify-between px-4 border-b shrink-0">
         <Logo variant="compact" />
         <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={undoSettings}
+              disabled={!canUndo}
+              className={cn(
+                'flex items-center gap-1.5 px-2 py-1',
+                'text-muted-foreground hover:text-accent disabled:opacity-50 disabled:pointer-events-none',
+              )}
+              title="Undo Settings"
+            >
+              <span className="text-foreground">(&larr;)</span>
+              <span className="hidden sm:inline">UNDO</span>
+            </button>
+            <button
+              onClick={redoSettings}
+              disabled={!canRedo}
+              className={cn(
+                'flex items-center gap-1.5 px-2 py-1',
+                'text-muted-foreground hover:text-accent disabled:opacity-50 disabled:pointer-events-none',
+              )}
+              title="Redo Settings"
+            >
+              <span className="text-foreground">(&rarr;)</span>
+              <span className="hidden sm:inline">REDO</span>
+            </button>
+          </div>
+          <button
+            onClick={shareSettings}
+            className={cn(
+              'flex items-center gap-1.5 px-2 py-1',
+              'text-muted-foreground hover:text-accent',
+            )}
+            title="Share Settings"
+          >
+            <span className="text-foreground">[S]</span>
+            <span className="hidden sm:inline">SHARE</span>
+          </button>
           <button
             onClick={cycleTheme}
             className={cn(

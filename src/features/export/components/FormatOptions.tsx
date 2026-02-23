@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import type { ExportOptions } from '@/shared/types/index.ts';
 import { cn } from '@/shared/utils/cn.ts';
 import { NavigableRadio } from '@/shared/ui/NavigableRadio.tsx';
@@ -44,8 +43,6 @@ export function FormatOptions({
   options,
   onChange,
 }: FormatOptionsProps) {
-  const savedPngBgRef = useRef('#1a1a1a');
-
   if (!selectedFormat) return null;
 
   const inputClass = cn(
@@ -106,6 +103,52 @@ export function FormatOptions({
         </div>
       );
 
+    case 'svg':
+      return (
+        <div className="flex flex-col gap-2 p-3 border bg-card">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            SVG Options
+          </span>
+          <NavigableNumberInput
+            label="Font size"
+            value={options.svgFontSize ?? 14}
+            onValueChange={(v) => onChange({ ...options, svgFontSize: v })}
+            min={6}
+            max={48}
+          />
+          <NavigableSelect
+            label="Font family"
+            value={options.svgFontFamily ?? "'IBM Plex Mono', 'Courier New', monospace"}
+            onValueChange={(v) => onChange({ ...options, svgFontFamily: v })}
+            options={PNG_FONT_FAMILIES}
+          />
+          <NavigableColorInput
+            label="Background"
+            value={
+              options.svgBackground === 'transparent'
+                ? (options.svgBackground || '#1a1a1a')
+                : (options.svgBackground ?? '#1a1a1a')
+            }
+            onChange={(v) => {
+              if (options.svgBackground !== 'transparent') {
+                onChange({ ...options, svgBackground: v });
+              }
+            }}
+          />
+          <NavigableSwitch
+            label="Transparent background"
+            checked={options.svgBackground === 'transparent'}
+            onCheckedChange={(v) => {
+              if (v) {
+                onChange({ ...options, svgBackground: 'transparent' });
+              } else {
+                onChange({ ...options, svgBackground: '#1a1a1a' });
+              }
+            }}
+          />
+        </div>
+      );
+
     case 'png':
       return (
         <div className="flex flex-col gap-2 p-3 border bg-card">
@@ -136,13 +179,8 @@ export function FormatOptions({
           />
           <NavigableColorInput
             label="Background"
-            value={
-              options.pngBackground === 'transparent'
-                ? savedPngBgRef.current
-                : (options.pngBackground ?? '#1a1a1a')
-            }
+            value={options.pngBackground === 'transparent' ? (options.pngBackground || '#1a1a1a') : (options.pngBackground ?? '#1a1a1a')}
             onChange={(v) => {
-              savedPngBgRef.current = v;
               if (options.pngBackground !== 'transparent') {
                 onChange({ ...options, pngBackground: v });
               }
@@ -153,13 +191,9 @@ export function FormatOptions({
             checked={options.pngBackground === 'transparent'}
             onCheckedChange={(v) => {
               if (v) {
-                const current = options.pngBackground;
-                if (current && current !== 'transparent') {
-                  savedPngBgRef.current = current;
-                }
                 onChange({ ...options, pngBackground: 'transparent' });
               } else {
-                onChange({ ...options, pngBackground: savedPngBgRef.current });
+                onChange({ ...options, pngBackground: '#1a1a1a' });
               }
             }}
           />

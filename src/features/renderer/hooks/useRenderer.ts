@@ -106,7 +106,6 @@ export function useRenderer(): void {
   const pendingRenderRef = useRef(false);
   // Store the last worker message so it can be replayed after a crash recovery
   const lastWorkerMessageRef = useRef<{
-    imageData: ArrayBuffer;
     width: number;
     settings: RenderSettings;
     sourceWidth: number;
@@ -151,9 +150,10 @@ export function useRenderer(): void {
 
           // Re-dispatch the last render request on the new worker
           const lastMsg = lastWorkerMessageRef.current;
-          if (lastMsg) {
+          if (lastMsg && sharedCanvas && sharedCtx) {
             useAppStore.getState().setIsRendering(true);
-            const buffer = lastMsg.imageData.slice(0);
+            const imageData = sharedCtx.getImageData(0, 0, sharedCanvas.width, sharedCanvas.height);
+            const buffer = imageData.data.buffer;
             workerRef.current.postMessage(
               {
                 type: 'render',
@@ -215,9 +215,8 @@ export function useRenderer(): void {
       useAppStore.getState().setIsRendering(true);
 
       if (workerRef.current) {
-        // Store a copy for crash recovery replay before transferring the buffer
+        // Store the settings for crash recovery replay
         lastWorkerMessageRef.current = {
-          imageData: imageData.data.buffer.slice(0),
           width: s.outputWidth,
           settings: s,
           sourceWidth: effectiveWidth,

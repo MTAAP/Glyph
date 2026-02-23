@@ -51,11 +51,14 @@ export interface RenderResult {
 }
 
 export interface ExportOptions {
-  format: 'txt' | 'ansi' | 'html' | 'png' | 'gif' | 'webm' | 'frames' | 'animated-html';
+  format: 'txt' | 'ansi' | 'html' | 'svg' | 'png' | 'gif' | 'webm' | 'frames' | 'animated-html';
   ansiColorDepth?: 8 | 16 | 256 | 'truecolor';
   htmlFontSize?: number;
   htmlFontFamily?: string;
   htmlBackground?: string;
+  svgFontSize?: number;
+  svgFontFamily?: string;
+  svgBackground?: string | 'transparent';
   pngFontSize?: number;
   pngFontFamily?: string;
   pngPadding?: number;
