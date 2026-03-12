@@ -13,6 +13,7 @@ import { useVideoFrames } from '@/features/renderer/hooks/useVideoFrames';
 import { useAnimationLoop } from '@/features/animation/hooks/useAnimationLoop';
 import { useZoom } from '@/features/preview/hooks/useZoom';
 import { useFullscreen } from '@/features/preview/hooks/useFullscreen';
+import { DemoGallery } from '@/features/demo/components/DemoGallery';
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -99,12 +100,12 @@ export function Canvas() {
         onWheel={zoom.containerHandlers.onWheel}
         onMouseDown={zoom.containerHandlers.onMouseDown}
       >
-        {/* Empty state */}
+        {/* Empty state — demo gallery */}
         {!hasSource && (
-          <div className="flex flex-col items-center gap-3 text-muted-foreground text-xs uppercase tracking-wide">
-            <div className="text-2xl">[^]</div>
-            <p>Drop image or video to begin</p>
-            <p className="text-xs normal-case tracking-normal">or use sidebar controls</p>
+          <div className="relative z-20 pointer-events-none w-full flex items-center justify-center p-6">
+            <div className="pointer-events-auto">
+              <DemoGallery />
+            </div>
           </div>
         )}
 

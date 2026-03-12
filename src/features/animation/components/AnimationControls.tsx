@@ -13,6 +13,17 @@ import { NavigableSelectTrigger } from '@/shared/ui/NavigableSelectTrigger';
 import type { LoopMode } from '@/shared/types';
 import { cn } from '@/shared/utils/cn';
 
+/** Representative palette colors shown in the preset preview strip. */
+const PRESET_PALETTE_COLORS: Record<string, string[]> = {
+  'cyberpunk-neon': ['#00e5ff', '#ff00ff', '#ffff00'],
+  'matrix': ['#00ff41', '#00bb30', '#005510'],
+  'blade-runner': ['#ffb000', '#ff6600', '#663300'],
+  'vhs-glitch': ['#00ffff', '#ff0066', '#888888'],
+  'typewriter': ['#e0e0e0', '#aaaaaa', '#666666'],
+  'neon-wave': ['#ff6ec7', '#00e5ff', '#4040ff'],
+  'blackwall': ['#dc143c', '#8b0000', '#ff2244'],
+};
+
 export function AnimationControls() {
   const animation = useAppStore((s) => s.animation);
   const updateAnimation = useAppStore((s) => s.updateAnimation);
@@ -56,6 +67,37 @@ export function AnimationControls() {
 
       {animation.enabled && (
         <>
+          {/* Preset Preview Strip */}
+          <div className="space-y-1.5">
+            <span className="text-xs">Presets</span>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {ANIMATION_PRESETS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => applyAnimationPreset(p.key)}
+                  title={p.description}
+                  className={cn(
+                    'flex-shrink-0 flex flex-col items-start gap-1 px-2 py-1.5 border text-xs transition-colors min-w-[64px]',
+                    animation.presetKey === p.key
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'hover:bg-accent border-border',
+                  )}
+                >
+                  <div className="flex gap-0.5">
+                    {PRESET_PALETTE_COLORS[p.key]?.map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[9px] leading-tight whitespace-nowrap">{p.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Preset Selector */}
           <div className="space-y-1.5">
             <span className="text-xs">Preset</span>
