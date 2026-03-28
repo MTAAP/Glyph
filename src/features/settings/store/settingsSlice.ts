@@ -27,6 +27,9 @@ export const DEFAULT_SETTINGS: RenderSettings = {
   cycleDirection: 'ltr',
 
   enableVariableType: false,
+  variableTypeItalic: false,
+  variableTypeOpacity: false,
+  variableTypeProportional: false,
 
   colorMode: 'mono',
   colorDepth: 256,

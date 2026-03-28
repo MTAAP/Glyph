@@ -20,7 +20,9 @@ function cellKey(cell: CharacterCell): string {
   const fg = cell.fg ? `${cell.fg[0]},${cell.fg[1]},${cell.fg[2]}` : '';
   const bg = cell.bg ? `${cell.bg[0]},${cell.bg[1]},${cell.bg[2]}` : '';
   const w = cell.weight ?? '';
-  return `${fg}|${bg}|${w}`;
+  const i = cell.italic ? 'i' : '';
+  const o = cell.opacity !== undefined ? cell.opacity.toFixed(2) : '';
+  return `${fg}|${bg}|${w}|${i}|${o}`;
 }
 
 function spanStyle(cell: CharacterCell): string {
@@ -29,6 +31,8 @@ function spanStyle(cell: CharacterCell): string {
   if (cell.bg)
     parts.push(`background-color:rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`);
   if (cell.weight !== undefined) parts.push(`font-weight:${cell.weight}`);
+  if (cell.italic) parts.push('font-style:italic');
+  if (cell.opacity !== undefined) parts.push(`opacity:${cell.opacity.toFixed(2)}`);
   return parts.join(';');
 }
 
@@ -50,7 +54,7 @@ export function formatHtml(
 
     while (i < row.length) {
       const cell = row[i];
-      const hasStyle = cell.fg !== undefined || cell.bg !== undefined || cell.weight !== undefined;
+      const hasStyle = cell.fg !== undefined || cell.bg !== undefined || cell.weight !== undefined || cell.italic || cell.opacity !== undefined;
 
       if (!hasStyle) {
         rowHtml += escapeHtml(cell.char);

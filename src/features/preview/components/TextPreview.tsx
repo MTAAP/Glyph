@@ -6,6 +6,7 @@ import type { CharacterGrid } from '@/shared/types';
 const FONT_SIZE = 10;
 const LINE_HEIGHT = 1.1;
 const FONT_FAMILY = "'IBM Plex Mono', 'Courier New', monospace";
+const PROPORTIONAL_FONT_FAMILY = "Georgia, 'Times New Roman', serif";
 
 function measureCharWidth(): number {
   const canvas = document.createElement('canvas');
@@ -18,14 +19,26 @@ function rgbStr(c: [number, number, number]): string {
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
 
-/** Check if any cell in the grid has a non-default weight. */
-function gridHasWeights(grid: CharacterGrid): boolean {
+/** Check if any cell in the grid has variable typographic properties. */
+function gridHasTypography(grid: CharacterGrid): boolean {
   for (const row of grid) {
     for (const cell of row) {
-      if (cell.weight !== undefined) return true;
+      if (cell.weight !== undefined || cell.italic || cell.opacity !== undefined) return true;
     }
   }
   return false;
+}
+
+function cellStyle(cell: { weight?: number; italic?: boolean; opacity?: number }): React.CSSProperties | undefined {
+  const hasWeight = cell.weight !== undefined;
+  const hasItalic = cell.italic;
+  const hasOpacity = cell.opacity !== undefined;
+  if (!hasWeight && !hasItalic && !hasOpacity) return undefined;
+  return {
+    fontWeight: cell.weight ?? undefined,
+    fontStyle: cell.italic ? 'italic' : undefined,
+    opacity: cell.opacity ?? undefined,
+  };
 }
 
 export function TextPreview({
@@ -42,6 +55,7 @@ export function TextPreview({
   const colorMode = useAppStore((s) => s.settings.colorMode);
   const monoFgColor = useAppStore((s) => s.settings.monoFgColor);
   const monoBgColor = useAppStore((s) => s.settings.monoBgColor);
+  const isProportional = useAppStore((s) => s.settings.variableTypeProportional && s.settings.enableVariableType);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
   const cellSpacingY = useAppStore((s) => s.cellSpacingY);
 
@@ -53,18 +67,24 @@ export function TextPreview({
 
   const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight, scaleMode, customScale);
 
+  const fontFamily = isProportional ? PROPORTIONAL_FONT_FAMILY : FONT_FAMILY;
+
   const content = useMemo(() => {
-    const spacingStyle = {
+    const spacingStyle: React.CSSProperties = {
       lineHeight: LINE_HEIGHT * cellSpacingY,
       letterSpacing: `${charWidth * (cellSpacingX - 1)}px`,
+      fontFamily,
     };
 
-    const hasWeights = gridHasWeights(grid);
+    const hasTypography = gridHasTypography(grid);
+    const preClass = isProportional
+      ? 'whitespace-pre select-all'
+      : 'font-mono whitespace-pre select-all';
 
-    if (colorMode === 'mono' && !hasWeights) {
+    if (colorMode === 'mono' && !hasTypography) {
       return (
         <pre
-          className="font-mono whitespace-pre select-all"
+          className={preClass}
           style={{
             fontSize: FONT_SIZE,
             ...spacingStyle,
@@ -80,10 +100,10 @@ export function TextPreview({
       );
     }
 
-    if (colorMode === 'mono' && hasWeights) {
+    if (colorMode === 'mono') {
       return (
         <pre
-          className="font-mono whitespace-pre select-all"
+          className={preClass}
           style={{
             fontSize: FONT_SIZE,
             ...spacingStyle,
@@ -93,12 +113,7 @@ export function TextPreview({
           {grid.map((row, y) => (
             <div key={y}>
               {row.map((cell, x) => (
-                <span
-                  key={x}
-                  style={{
-                    fontWeight: cell.weight ?? undefined,
-                  }}
-                >
+                <span key={x} style={cellStyle(cell)}>
                   {cell.char}
                 </span>
               ))}
@@ -111,7 +126,7 @@ export function TextPreview({
     if (colorMode === 'foreground') {
       return (
         <pre
-          className="font-mono whitespace-pre select-all"
+          className={preClass}
           style={{ fontSize: FONT_SIZE, ...spacingStyle }}
         >
           {grid.map((row, y) => (
@@ -121,7 +136,7 @@ export function TextPreview({
                   key={x}
                   style={{
                     color: cell.fg ? rgbStr(cell.fg) : undefined,
-                    fontWeight: cell.weight ?? undefined,
+                    ...cellStyle(cell),
                   }}
                 >
                   {cell.char}
@@ -136,7 +151,7 @@ export function TextPreview({
     // Full color mode
     return (
       <pre
-        className="font-mono whitespace-pre select-all"
+        className={preClass}
         style={{ fontSize: FONT_SIZE, ...spacingStyle }}
       >
         {grid.map((row, y) => (
@@ -147,7 +162,7 @@ export function TextPreview({
                 style={{
                   color: cell.fg ? rgbStr(cell.fg) : undefined,
                   backgroundColor: cell.bg ? rgbStr(cell.bg) : undefined,
-                  fontWeight: cell.weight ?? undefined,
+                  ...cellStyle(cell),
                 }}
               >
                 {cell.char}
@@ -157,7 +172,7 @@ export function TextPreview({
         ))}
       </pre>
     );
-  }, [grid, colorMode, monoFgColor, charWidth, cellSpacingX, cellSpacingY]);
+  }, [grid, colorMode, monoFgColor, charWidth, cellSpacingX, cellSpacingY, fontFamily, isProportional]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;

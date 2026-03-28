@@ -5,7 +5,7 @@ import { computeLuminanceGrid, mapLuminanceToChars } from './luminance';
 import { detectEdges } from './edge-detect';
 import { applyDithering } from './dither';
 import { renderBraille } from './braille';
-import { mapLuminanceToVariableType } from './variable-type';
+import { mapLuminanceToVariableType, type VariableTypeOptions } from './variable-type';
 
 /**
  * Main character mapping orchestrator.
@@ -237,7 +237,12 @@ function buildVariableTypeGrid(
     lumGrid = applyDithering(lumGrid, charset.length, settings.ditheringStrength);
   }
 
-  const varGrid = mapLuminanceToVariableType(lumGrid, charset, settings.invertRamp);
+  const varOptions: VariableTypeOptions = {
+    italic: settings.variableTypeItalic,
+    opacity: settings.variableTypeOpacity,
+    proportional: settings.variableTypeProportional,
+  };
+  const varGrid = mapLuminanceToVariableType(lumGrid, charset, settings.invertRamp, varOptions);
 
   // Overlay edge detection and apply color
   let edgeGrid: (string | null)[][] | null = null;
@@ -256,7 +261,9 @@ function buildVariableTypeGrid(
 
       if (edgeChar) {
         cell.char = edgeChar;
-        cell.weight = undefined; // Edge chars use default weight
+        cell.weight = undefined;
+        cell.italic = undefined;
+        cell.opacity = undefined;
       }
 
       if (settings.colorMode !== 'mono') {

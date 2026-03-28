@@ -25,6 +25,9 @@ export interface RenderSettings {
   cycleDirection: CycleDirection;
 
   enableVariableType: boolean;
+  variableTypeItalic: boolean;
+  variableTypeOpacity: boolean;
+  variableTypeProportional: boolean;
 
   colorMode: 'mono' | 'foreground' | 'full';
   colorDepth: 8 | 16 | 256 | 'truecolor';
@@ -42,6 +45,8 @@ export interface CharacterCell {
   fg?: [number, number, number];
   bg?: [number, number, number];
   weight?: number;
+  italic?: boolean;
+  opacity?: number;
 }
 
 export type CharacterGrid = CharacterCell[][];

@@ -17,6 +17,27 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
+function buildSvgText(
+  styleKey: string,
+  startX: number,
+  y: number,
+  charWidth: number,
+  charHeight: number,
+  textBaselineOffset: number,
+  text: string,
+): string {
+  const [color, weightStr, italicStr, opacityStr] = styleKey.split('|');
+  const attrs: string[] = [];
+  attrs.push(`x="${(startX * charWidth).toFixed(1)}"`);
+  attrs.push(`y="${((y * charHeight) + textBaselineOffset).toFixed(1)}"`);
+  attrs.push(`fill="${color}"`);
+  if (weightStr !== '400') attrs.push(`font-weight="${weightStr}"`);
+  if (italicStr === 'i') attrs.push('font-style="italic"');
+  if (opacityStr !== '1') attrs.push(`opacity="${opacityStr}"`);
+  attrs.push('xml:space="preserve"');
+  return `<text ${attrs.join(' ')}>${escapeXml(text)}</text>\n`;
+}
+
 export function formatSvg(
   grid: CharacterGrid,
   options: SvgOptions = {},
@@ -81,13 +102,13 @@ export function formatSvg(
       const cell = row[x];
       const fgColor = cell.fg ? `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})` : '#e0e0e0';
       const weight = cell.weight ?? 400;
-      const styleKey = `${fgColor}|${weight}`;
+      const italic = cell.italic ? 'i' : 'n';
+      const opacity = cell.opacity !== undefined ? cell.opacity.toFixed(2) : '1';
+      const styleKey = `${fgColor}|${weight}|${italic}|${opacity}`;
 
       if (styleKey !== currentColor) {
         if (currentColor !== null && startX !== -1 && currentText.trim() !== '') {
-          const [prevColor, prevWeight] = currentColor.split('|');
-          const weightAttr = prevWeight !== '400' ? ` font-weight="${prevWeight}"` : '';
-          svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${prevColor}"${weightAttr} xml:space="preserve">${escapeXml(currentText)}</text>\n`;
+          svgContent += buildSvgText(currentColor, startX, y, charWidth, charHeight, textBaselineOffset, currentText);
         }
         currentColor = styleKey;
         startX = x;
@@ -98,9 +119,7 @@ export function formatSvg(
     }
 
     if (currentColor !== null && startX !== -1 && currentText.trim() !== '') {
-      const [prevColor, prevWeight] = currentColor.split('|');
-      const weightAttr = prevWeight !== '400' ? ` font-weight="${prevWeight}"` : '';
-      svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${prevColor}"${weightAttr} xml:space="preserve">${escapeXml(currentText)}</text>\n`;
+      svgContent += buildSvgText(currentColor, startX, y, charWidth, charHeight, textBaselineOffset, currentText);
     }
   }
 

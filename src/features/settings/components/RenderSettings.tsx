@@ -104,11 +104,32 @@ export function RenderSettings() {
         />
       )}
       {showFullControls && (
-        <NavigableSwitch
-          label="Variable Weight"
-          checked={settings.enableVariableType}
-          onCheckedChange={(v) => updateSettings({ enableVariableType: v })}
-        />
+        <>
+          <NavigableSwitch
+            label="Variable Weight"
+            checked={settings.enableVariableType}
+            onCheckedChange={(v) => updateSettings({ enableVariableType: v })}
+          />
+          {settings.enableVariableType && (
+            <>
+              <NavigableSwitch
+                label="  + Italic"
+                checked={settings.variableTypeItalic}
+                onCheckedChange={(v) => updateSettings({ variableTypeItalic: v })}
+              />
+              <NavigableSwitch
+                label="  + Opacity"
+                checked={settings.variableTypeOpacity}
+                onCheckedChange={(v) => updateSettings({ variableTypeOpacity: v })}
+              />
+              <NavigableSwitch
+                label="  + Proportional"
+                checked={settings.variableTypeProportional}
+                onCheckedChange={(v) => updateSettings({ variableTypeProportional: v })}
+              />
+            </>
+          )}
+        </>
       )}
       <NavigableSwitch
         label="Invert"
