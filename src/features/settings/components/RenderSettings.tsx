@@ -2,8 +2,8 @@ import { useAppStore } from '@/features/settings/store';
 import { NavigableSlider } from '@/shared/ui/NavigableSlider';
 import { NavigableSelect } from '@/shared/ui/NavigableSelect';
 import { NavigableSwitch } from '@/shared/ui/NavigableSwitch';
-import { VARIABLE_TYPE_FONTS } from '@/shared/types';
-import type { VariableTypeFont } from '@/shared/types';
+import { VARIABLE_TYPE_FONTS, VARIABLE_TYPE_COLOR_PRESETS } from '@/shared/types';
+import type { VariableTypeFont, VariableTypeColorPreset } from '@/shared/types';
 
 export function RenderSettings() {
   const settings = useAppStore((s) => s.settings);
@@ -141,6 +141,18 @@ export function RenderSettings() {
                   }))}
                 />
               )}
+              <NavigableSelect
+                label="  Color Preset"
+                value={settings.variableTypeColorPreset}
+                onValueChange={(v) => updateSettings({ variableTypeColorPreset: v as VariableTypeColorPreset })}
+                options={[
+                  { value: 'default', label: 'Default' },
+                  ...Object.keys(VARIABLE_TYPE_COLOR_PRESETS).map((preset) => ({
+                    value: preset,
+                    label: preset.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' '),
+                  })),
+                ]}
+              />
             </>
           )}
         </>
