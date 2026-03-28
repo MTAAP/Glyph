@@ -1,6 +1,9 @@
 import { useAppStore } from '@/features/settings/store';
 import { NavigableSlider } from '@/shared/ui/NavigableSlider';
+import { NavigableSelect } from '@/shared/ui/NavigableSelect';
 import { NavigableSwitch } from '@/shared/ui/NavigableSwitch';
+import { VARIABLE_TYPE_FONTS } from '@/shared/types';
+import type { VariableTypeFont } from '@/shared/types';
 
 export function RenderSettings() {
   const settings = useAppStore((s) => s.settings);
@@ -127,6 +130,17 @@ export function RenderSettings() {
                 checked={settings.variableTypeProportional}
                 onCheckedChange={(v) => updateSettings({ variableTypeProportional: v })}
               />
+              {settings.variableTypeProportional && (
+                <NavigableSelect
+                  label="  Font"
+                  value={settings.variableTypeFont}
+                  onValueChange={(v) => updateSettings({ variableTypeFont: v as VariableTypeFont })}
+                  options={Object.keys(VARIABLE_TYPE_FONTS).map((font) => ({
+                    value: font,
+                    label: font,
+                  }))}
+                />
+              )}
             </>
           )}
         </>
