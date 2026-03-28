@@ -30,6 +30,8 @@ export const DEFAULT_SETTINGS: RenderSettings = {
   variableTypeItalic: false,
   variableTypeOpacity: false,
   variableTypeProportional: false,
+  variableTypeFont: 'Georgia',
+  variableTypeColorPreset: 'default',
 
   colorMode: 'mono',
   colorDepth: 256,

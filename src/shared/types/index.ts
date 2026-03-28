@@ -1,5 +1,60 @@
 export type CycleDirection = 'ltr' | 'rtl' | 'ttb' | 'reverse';
 
+export type VariableTypeFont =
+  | 'Georgia'
+  | 'Palatino'
+  | 'Times'
+  | 'Arial'
+  | 'Helvetica'
+  | 'IBM Plex Mono'
+  | 'Courier';
+
+export type VariableTypeColorPreset =
+  | 'default'
+  | 'warm-gold'
+  | 'cool-blue'
+  | 'amber'
+  | 'rose';
+
+/** RGB color values for variable type color presets. */
+export const VARIABLE_TYPE_COLOR_PRESETS: Record<Exclude<VariableTypeColorPreset, 'default'>, string> = {
+  'warm-gold': 'rgb(196,163,90)',
+  'cool-blue': 'rgb(100,149,237)',
+  'amber': 'rgb(255,191,0)',
+  'rose': 'rgb(255,105,120)',
+};
+
+/** All available variable type fonts with their CSS font-family stacks. */
+export const VARIABLE_TYPE_FONTS: Record<VariableTypeFont, string> = {
+  'Georgia': "Georgia, serif",
+  'Palatino': "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
+  'Times': "'Times New Roman', Times, serif",
+  'Arial': "Arial, Helvetica, sans-serif",
+  'Helvetica': "Helvetica, Arial, sans-serif",
+  'IBM Plex Mono': "'IBM Plex Mono', 'Courier New', monospace",
+  'Courier': "'Courier New', Courier, monospace",
+};
+
+/**
+ * A single entry in the runtime-measured font palette.
+ * Produced by font-measurer.ts, consumed by variable-type.ts.
+ */
+export interface MeasuredEntry {
+  char: string;
+  weight: number;
+  italic: boolean;
+  /** Normalized 0–1 pixel coverage brightness. */
+  brightness: number;
+  /** Character width relative to em (from canvas.measureText). */
+  width: number;
+}
+
+/**
+ * A sorted array of MeasuredEntry, ready for binary search lookup.
+ * Sorted ascending by brightness.
+ */
+export type MeasuredPalette = MeasuredEntry[];
+
 export interface RenderSettings {
   outputWidth: number;
   aspectRatioCorrection: number;
@@ -28,6 +83,8 @@ export interface RenderSettings {
   variableTypeItalic: boolean;
   variableTypeOpacity: boolean;
   variableTypeProportional: boolean;
+  variableTypeFont: VariableTypeFont;
+  variableTypeColorPreset: VariableTypeColorPreset;
 
   colorMode: 'mono' | 'foreground' | 'full';
   colorDepth: 8 | 16 | 256 | 'truecolor';
@@ -97,6 +154,8 @@ export interface WorkerRequest {
   settings: RenderSettings;
   sourceWidth: number;
   sourceHeight: number;
+  /** Runtime-measured font palette, or undefined to use static fallback tables. */
+  measuredPalette?: MeasuredPalette;
 }
 
 export interface WorkerResponse {
