@@ -3,6 +3,9 @@ import { useAppStore } from '@/features/settings/store';
 import { CHARSET_PRESETS } from '@/features/settings/presets';
 import { revokeActiveBlobUrl } from '@/features/input/hooks/useFileInput';
 import { useSidebarNavigation } from '@/features/settings/context/SidebarNavigationContext';
+import type { VariableTypeColorPreset } from '@/shared/types';
+
+const COLOR_PRESET_ORDER: VariableTypeColorPreset[] = ['default', 'warm-gold', 'cool-blue', 'amber', 'rose'];
 
 export function KeyboardHandler() {
   const { moveUp, moveDown, adjustValue, triggerAction, focusedIndex, getControls } = useSidebarNavigation();
@@ -151,7 +154,12 @@ export function KeyboardHandler() {
         case 'c':
         case 'C': {
           if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-          if (state.renderResult) {
+          if (e.shiftKey && state.settings.enableVariableType) {
+            e.preventDefault();
+            const currentIdx = COLOR_PRESET_ORDER.indexOf(state.settings.variableTypeColorPreset);
+            const nextIdx = (currentIdx + 1) % COLOR_PRESET_ORDER.length;
+            state.updateSettings({ variableTypeColorPreset: COLOR_PRESET_ORDER[nextIdx] });
+          } else if (state.renderResult) {
             state.setFormatModalOpen(true, 'copy');
           }
           break;
