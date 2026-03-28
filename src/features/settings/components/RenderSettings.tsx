@@ -106,7 +106,7 @@ export function RenderSettings() {
       {showFullControls && (
         <>
           <NavigableSwitch
-            label="Variable Weight"
+            label="Variable Typography"
             checked={settings.enableVariableType}
             onCheckedChange={(v) => updateSettings({ enableVariableType: v })}
           />
