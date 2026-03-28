@@ -5,6 +5,7 @@ import { computeLuminanceGrid, mapLuminanceToChars } from './luminance';
 import { detectEdges } from './edge-detect';
 import { applyDithering } from './dither';
 import { renderBraille } from './braille';
+import { mapLuminanceToVariableType } from './variable-type';
 
 /**
  * Main character mapping orchestrator.
@@ -172,6 +173,11 @@ function buildCharsetGrid(
   const { rows, cols } = samples;
   const luminanceGrid = computeLuminanceGrid(samples.samples);
 
+  // Variable typography path: character + font weight from luminance
+  if (settings.enableVariableType) {
+    return buildVariableTypeGrid(samples, settings, charset, luminanceGrid);
+  }
+
   // Determine character grid from luminance
   let charGrid: string[][];
 
@@ -202,6 +208,56 @@ function buildCharsetGrid(
       const edgeChar = edgeGrid?.[y]?.[x];
       const char = edgeChar ?? charGrid[y][x];
       const cell: CharacterCell = { char };
+
+      if (settings.colorMode !== 'mono') {
+        const sample = samples.samples[y][x];
+        applyColor(cell, sample.r, sample.g, sample.b, settings.colorMode);
+      }
+
+      row[x] = cell;
+    }
+
+    grid[y] = row;
+  }
+
+  return grid;
+}
+
+function buildVariableTypeGrid(
+  samples: SampleResult,
+  settings: RenderSettings,
+  charset: string,
+  luminanceGrid: number[][],
+): CharacterGrid {
+  const { rows, cols } = samples;
+
+  // Apply dithering to luminance if enabled, then map with variable type
+  let lumGrid = luminanceGrid;
+  if (settings.enableDithering) {
+    lumGrid = applyDithering(lumGrid, charset.length, settings.ditheringStrength);
+  }
+
+  const varGrid = mapLuminanceToVariableType(lumGrid, charset, settings.invertRamp);
+
+  // Overlay edge detection and apply color
+  let edgeGrid: (string | null)[][] | null = null;
+  if (settings.enableEdge) {
+    edgeGrid = detectEdges(luminanceGrid, settings.edgeThreshold);
+  }
+
+  const grid: CharacterGrid = new Array(rows);
+
+  for (let y = 0; y < rows; y++) {
+    const row = new Array<CharacterCell>(cols);
+
+    for (let x = 0; x < cols; x++) {
+      const edgeChar = edgeGrid?.[y]?.[x];
+      const cell = varGrid[y][x];
+
+      if (edgeChar) {
+        cell.char = edgeChar;
+        cell.weight = undefined; // Edge chars use default weight
+      }
 
       if (settings.colorMode !== 'mono') {
         const sample = samples.samples[y][x];

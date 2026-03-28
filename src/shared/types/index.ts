@@ -24,6 +24,8 @@ export interface RenderSettings {
   wordThreshold: number;
   cycleDirection: CycleDirection;
 
+  enableVariableType: boolean;
+
   colorMode: 'mono' | 'foreground' | 'full';
   colorDepth: 8 | 16 | 256 | 'truecolor';
   monoFgColor: string;
@@ -39,6 +41,7 @@ export interface CharacterCell {
   char: string;
   fg?: [number, number, number];
   bg?: [number, number, number];
+  weight?: number;
 }
 
 export type CharacterGrid = CharacterCell[][];

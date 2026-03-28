@@ -103,6 +103,13 @@ export function RenderSettings() {
           max={255}
         />
       )}
+      {showFullControls && (
+        <NavigableSwitch
+          label="Variable Weight"
+          checked={settings.enableVariableType}
+          onCheckedChange={(v) => updateSettings({ enableVariableType: v })}
+        />
+      )}
       <NavigableSwitch
         label="Invert"
         checked={settings.invertRamp}

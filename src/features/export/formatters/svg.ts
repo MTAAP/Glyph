@@ -79,15 +79,17 @@ export function formatSvg(
 
     for (let x = 0; x < cols; x++) {
       const cell = row[x];
-      // Skip empty space if it has no color, or default to generic fill
       const fgColor = cell.fg ? `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})` : '#e0e0e0';
+      const weight = cell.weight ?? 400;
+      const styleKey = `${fgColor}|${weight}`;
 
-      if (fgColor !== currentColor) {
+      if (styleKey !== currentColor) {
         if (currentColor !== null && startX !== -1 && currentText.trim() !== '') {
-          // preserve spaces via xml:space="preserve"
-          svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${currentColor}" xml:space="preserve">${escapeXml(currentText)}</text>\n`;
+          const [prevColor, prevWeight] = currentColor.split('|');
+          const weightAttr = prevWeight !== '400' ? ` font-weight="${prevWeight}"` : '';
+          svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${prevColor}"${weightAttr} xml:space="preserve">${escapeXml(currentText)}</text>\n`;
         }
-        currentColor = fgColor;
+        currentColor = styleKey;
         startX = x;
         currentText = cell.char;
       } else {
@@ -96,7 +98,9 @@ export function formatSvg(
     }
 
     if (currentColor !== null && startX !== -1 && currentText.trim() !== '') {
-      svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${currentColor}" xml:space="preserve">${escapeXml(currentText)}</text>\n`;
+      const [prevColor, prevWeight] = currentColor.split('|');
+      const weightAttr = prevWeight !== '400' ? ` font-weight="${prevWeight}"` : '';
+      svgContent += `<text x="${(startX * charWidth).toFixed(1)}" y="${((y * charHeight) + textBaselineOffset).toFixed(1)}" fill="${prevColor}"${weightAttr} xml:space="preserve">${escapeXml(currentText)}</text>\n`;
     }
   }
 

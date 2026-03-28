@@ -58,6 +58,7 @@ export function CanvasPreview({
     ctx.textBaseline = 'top';
 
     const bgGroups = new Map<string, { px: number; py: number }[]>();
+    // Group foreground by color+weight for batched drawing
     const fgGroups = new Map<string, { char: string; px: number; py: number }[]>();
 
     for (let y = 0; y < rows; y++) {
@@ -78,7 +79,7 @@ export function CanvasPreview({
           list.push({ px, py });
         }
 
-        // Group foreground characters by color (skip whitespace)
+        // Group foreground characters by color+weight (skip whitespace)
         if (cell.char !== ' ' && cell.char !== '') {
           let colorStr = '#e0e0e0';
           if (cell.fg) {
@@ -86,10 +87,13 @@ export function CanvasPreview({
           } else if (colorMode === 'mono') {
             colorStr = monoFgColor;
           }
-          let list = fgGroups.get(colorStr);
+          // Include weight in key for batching by font style
+          const weight = cell.weight ?? 400;
+          const key = `${colorStr}|${weight}`;
+          let list = fgGroups.get(key);
           if (!list) {
             list = [];
-            fgGroups.set(colorStr, list);
+            fgGroups.set(key, list);
           }
           list.push({ char: cell.char, px, py });
         }
@@ -109,13 +113,19 @@ export function CanvasPreview({
       ctx.fill();
     }
 
-    // Draw foregrounds in batches
-    for (const [color, items] of fgGroups.entries()) {
+    // Draw foregrounds in batches (grouped by color+weight)
+    for (const [key, items] of fgGroups.entries()) {
+      const [color, weightStr] = key.split('|');
+      const weight = parseInt(weightStr, 10);
       ctx.fillStyle = color;
+      ctx.font = `${weight} ${FONT_SIZE}px ${FONT_FAMILY}`;
       for (const { char, px, py } of items) {
         ctx.fillText(char, px, py);
       }
     }
+
+    // Reset font to default
+    ctx.font = `${FONT_SIZE}px ${FONT_FAMILY}`;
   }, [grid, cellPitchX, cellPitchY, colorMode, monoFgColor]);
 
   const scaledWidth = contentWidth * scale;

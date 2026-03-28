@@ -46,6 +46,7 @@ export function formatPng(
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
+  let currentWeight = 400;
   for (let r = 0; r < rows; r++) {
     const row = grid[r];
     const y = padding + r * cellPitchY;
@@ -57,6 +58,13 @@ export function formatPng(
       if (cell.bg) {
         ctx.fillStyle = `rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`;
         ctx.fillRect(x, y, cellPitchX, cellPitchY);
+      }
+
+      // Update font weight if cell specifies one
+      const weight = cell.weight ?? 400;
+      if (weight !== currentWeight) {
+        ctx.font = `${weight} ${fontSize}px ${fontFamily}`;
+        currentWeight = weight;
       }
 
       if (cell.fg) {

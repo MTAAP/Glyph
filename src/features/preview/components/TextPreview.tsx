@@ -18,6 +18,16 @@ function rgbStr(c: [number, number, number]): string {
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
 
+/** Check if any cell in the grid has a non-default weight. */
+function gridHasWeights(grid: CharacterGrid): boolean {
+  for (const row of grid) {
+    for (const cell of row) {
+      if (cell.weight !== undefined) return true;
+    }
+  }
+  return false;
+}
+
 export function TextPreview({
   grid,
   containerRef,
@@ -49,7 +59,9 @@ export function TextPreview({
       letterSpacing: `${charWidth * (cellSpacingX - 1)}px`,
     };
 
-    if (colorMode === 'mono') {
+    const hasWeights = gridHasWeights(grid);
+
+    if (colorMode === 'mono' && !hasWeights) {
       return (
         <pre
           className="font-mono whitespace-pre select-all"
@@ -62,6 +74,34 @@ export function TextPreview({
           {grid.map((row, y) => (
             <div key={y}>
               {row.map((cell) => cell.char).join('')}
+            </div>
+          ))}
+        </pre>
+      );
+    }
+
+    if (colorMode === 'mono' && hasWeights) {
+      return (
+        <pre
+          className="font-mono whitespace-pre select-all"
+          style={{
+            fontSize: FONT_SIZE,
+            ...spacingStyle,
+            color: monoFgColor,
+          }}
+        >
+          {grid.map((row, y) => (
+            <div key={y}>
+              {row.map((cell, x) => (
+                <span
+                  key={x}
+                  style={{
+                    fontWeight: cell.weight ?? undefined,
+                  }}
+                >
+                  {cell.char}
+                </span>
+              ))}
             </div>
           ))}
         </pre>
@@ -81,6 +121,7 @@ export function TextPreview({
                   key={x}
                   style={{
                     color: cell.fg ? rgbStr(cell.fg) : undefined,
+                    fontWeight: cell.weight ?? undefined,
                   }}
                 >
                   {cell.char}
@@ -106,6 +147,7 @@ export function TextPreview({
                 style={{
                   color: cell.fg ? rgbStr(cell.fg) : undefined,
                   backgroundColor: cell.bg ? rgbStr(cell.bg) : undefined,
+                  fontWeight: cell.weight ?? undefined,
                 }}
               >
                 {cell.char}

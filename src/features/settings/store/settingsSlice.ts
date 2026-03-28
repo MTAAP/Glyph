@@ -26,6 +26,8 @@ export const DEFAULT_SETTINGS: RenderSettings = {
   wordThreshold: 128,
   cycleDirection: 'ltr',
 
+  enableVariableType: false,
+
   colorMode: 'mono',
   colorDepth: 256,
   monoFgColor: '#e0e0e0',
