@@ -1,15 +1,39 @@
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import type { WorkerMessage } from '../worker/protocol';
-import type { RenderSettings } from '@/shared/types';
+import type { RenderSettings, MeasuredPalette, VariableTypeFont } from '@/shared/types';
+import { VARIABLE_TYPE_FONTS } from '@/shared/types';
 import type { CropRect } from '@/features/crop/types';
 import { sampleGrid } from '../engine/sampler';
 import { applyAdjustments } from '../engine/adjustments';
 import { mapToCharacters } from '../engine/mapper';
 import { getActiveCharset } from '@/features/settings/presets';
+import { measureCharsetPalette } from '../engine/font-measurer';
 
 const DEBOUNCE_MS = 150;
 const MAX_RETRIES = 3;
+
+/**
+ * Returns a MeasuredPalette for the current settings, or undefined if
+ * variable type proportional mode is not active. Uses the font-measurer
+ * cache, so this is fast on repeat calls with the same font+charset.
+ */
+function getMeasuredPalette(settings: RenderSettings): MeasuredPalette | undefined {
+  if (!settings.enableVariableType || !settings.variableTypeProportional) {
+    return undefined;
+  }
+
+  const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
+  const fontFamily = VARIABLE_TYPE_FONTS[settings.variableTypeFont as VariableTypeFont] ?? settings.variableTypeFont;
+
+  try {
+    const palette = measureCharsetPalette(charset, fontFamily, settings.variableTypeItalic);
+    return palette.length > 0 ? palette : undefined;
+  } catch {
+    // Measurement failed — fall back to static tables
+    return undefined;
+  }
+}
 
 // Persistent canvas for extractImageData to avoid per-render allocation
 let sharedCanvas: HTMLCanvasElement | null = null;
@@ -68,6 +92,7 @@ function renderOnMainThread(
   const start = performance.now();
   const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const data = imageData.data;
+  const measuredPalette = getMeasuredPalette(settings);
 
   const rawSamples = sampleGrid(
     data,
@@ -86,6 +111,7 @@ function renderOnMainThread(
     data,
     sourceWidth,
     sourceHeight,
+    measuredPalette,
   );
 
   const renderTimeMs = performance.now() - start;
@@ -215,6 +241,8 @@ export function useRenderer(): void {
       useAppStore.getState().setIsRendering(true);
 
       if (workerRef.current) {
+        const measuredPalette = getMeasuredPalette(s);
+
         // Store the settings for crash recovery replay
         lastWorkerMessageRef.current = {
           width: s.outputWidth,
@@ -233,6 +261,7 @@ export function useRenderer(): void {
             settings: s,
             sourceWidth: effectiveWidth,
             sourceHeight: effectiveHeight,
+            measuredPalette,
           },
           [buffer],
         );

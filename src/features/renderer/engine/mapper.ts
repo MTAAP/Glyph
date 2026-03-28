@@ -1,4 +1,4 @@
-import type { CharacterGrid, CharacterCell, RenderSettings, CycleDirection } from '@/shared/types';
+import type { CharacterGrid, CharacterCell, RenderSettings, CycleDirection, MeasuredPalette } from '@/shared/types';
 import { contrastingColor } from '@/shared/utils/color';
 import type { SampleResult } from './sampler';
 import { computeLuminanceGrid, mapLuminanceToChars } from './luminance';
@@ -27,6 +27,7 @@ export function mapToCharacters(
   imageData: Uint8ClampedArray,
   sourceWidth: number,
   sourceHeight: number,
+  measuredPalette?: MeasuredPalette,
 ): CharacterGrid {
   // Braille path -- bypasses luminance/charset pipeline entirely
   if (charset === 'braille') {
@@ -44,7 +45,7 @@ export function mapToCharacters(
     return buildWordCycleGrid(samples, settings, charset);
   }
 
-  return buildCharsetGrid(samples, settings, charset);
+  return buildCharsetGrid(samples, settings, charset, measuredPalette);
 }
 
 /**
@@ -169,13 +170,14 @@ function buildCharsetGrid(
   samples: SampleResult,
   settings: RenderSettings,
   charset: string,
+  measuredPalette?: MeasuredPalette,
 ): CharacterGrid {
   const { rows, cols } = samples;
   const luminanceGrid = computeLuminanceGrid(samples.samples);
 
   // Variable typography path: character + font weight from luminance
   if (settings.enableVariableType) {
-    return buildVariableTypeGrid(samples, settings, charset, luminanceGrid);
+    return buildVariableTypeGrid(samples, settings, charset, luminanceGrid, measuredPalette);
   }
 
   // Determine character grid from luminance
@@ -228,6 +230,7 @@ function buildVariableTypeGrid(
   settings: RenderSettings,
   charset: string,
   luminanceGrid: number[][],
+  measuredPalette?: MeasuredPalette,
 ): CharacterGrid {
   const { rows, cols } = samples;
 
@@ -242,7 +245,7 @@ function buildVariableTypeGrid(
     opacity: settings.variableTypeOpacity,
     proportional: settings.variableTypeProportional,
   };
-  const varGrid = mapLuminanceToVariableType(lumGrid, charset, settings.invertRamp, varOptions);
+  const varGrid = mapLuminanceToVariableType(lumGrid, charset, settings.invertRamp, varOptions, measuredPalette);
 
   // Overlay edge detection and apply color
   let edgeGrid: (string | null)[][] | null = null;
