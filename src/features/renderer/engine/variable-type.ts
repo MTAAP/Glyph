@@ -32,6 +32,15 @@ export interface VariableTypeOptions {
 }
 
 /**
+ * Quantizes a continuous opacity value to one of 8 discrete tiers.
+ * Rounds to nearest 0.1, then clamps to [0.3, 1.0].
+ */
+export function quantizeOpacity(value: number): number {
+  const rounded = Math.round(value * 10) / 10;
+  return Math.max(OPACITY_MIN, Math.min(OPACITY_MAX, rounded));
+}
+
+/**
  * Maps a luminance grid to CharacterCells with weight, italic, and opacity.
  *
  * The fraction within each character's luminance band is distributed across
@@ -100,7 +109,7 @@ export function mapLuminanceToVariableType(
         if (useOpacity) {
           // Use residual between discrete levels for opacity
           const residual = level - discreteLevel;
-          cell.opacity = OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) * (0.5 + residual * 0.5);
+          cell.opacity = quantizeOpacity(OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) * (0.5 + residual * 0.5));
         }
       } else {
         // Weight only (with optional opacity)
@@ -111,7 +120,7 @@ export function mapLuminanceToVariableType(
         if (useOpacity) {
           // Use residual between weight steps for opacity
           const residual = weightLevel - discreteWeight;
-          cell.opacity = OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) * (0.5 + residual * 0.5);
+          cell.opacity = quantizeOpacity(OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) * (0.5 + residual * 0.5));
         }
       }
 
@@ -325,8 +334,8 @@ function mapProportionalType(
         // Fine-tune with opacity based on remaining brightness error
         const brightnessDiff = targetBrightness - bestEntry.brightness;
         // Positive diff = need more brightness → higher opacity
-        cell.opacity = OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) *
-          Math.max(0, Math.min(1, 0.5 + brightnessDiff * 3));
+        cell.opacity = quantizeOpacity(OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) *
+          Math.max(0, Math.min(1, 0.5 + brightnessDiff * 3)));
       }
 
       cellRow[x] = cell;
