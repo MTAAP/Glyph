@@ -1,4 +1,3 @@
-import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { NavigableSlider } from '@/shared/ui/NavigableSlider';
 import { NavigableSelect } from '@/shared/ui/NavigableSelect';
@@ -9,19 +8,6 @@ import type { VariableTypeFont, VariableTypeColorPreset } from '@/shared/types';
 export function RenderSettings() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
-  const [isMeasuring, setIsMeasuring] = useState(false);
-  const measureTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const prevFontRef = useRef(settings.variableTypeFont);
-
-  useEffect(() => {
-    if (prevFontRef.current !== settings.variableTypeFont) {
-      prevFontRef.current = settings.variableTypeFont;
-      setIsMeasuring(true);
-      clearTimeout(measureTimerRef.current);
-      measureTimerRef.current = setTimeout(() => setIsMeasuring(false), 200);
-    }
-    return () => clearTimeout(measureTimerRef.current);
-  }, [settings.variableTypeFont]);
 
   const isBraille = settings.charsetPreset === 'braille';
   const isWordCycle = settings.charsetPreset === 'word' && settings.wordMode === 'cycle';
@@ -145,20 +131,15 @@ export function RenderSettings() {
                 onCheckedChange={(v) => updateSettings({ variableTypeProportional: v })}
               />
               {settings.variableTypeProportional && (
-                <>
-                  <NavigableSelect
-                    label="  Font"
-                    value={settings.variableTypeFont}
-                    onValueChange={(v) => updateSettings({ variableTypeFont: v as VariableTypeFont })}
-                    options={Object.keys(VARIABLE_TYPE_FONTS).map((font) => ({
-                      value: font,
-                      label: font,
-                    }))}
-                  />
-                  {isMeasuring && (
-                    <p className="text-xs text-muted-foreground pl-1">measuring...</p>
-                  )}
-                </>
+                <NavigableSelect
+                  label="  Font"
+                  value={settings.variableTypeFont}
+                  onValueChange={(v) => updateSettings({ variableTypeFont: v as VariableTypeFont })}
+                  options={Object.keys(VARIABLE_TYPE_FONTS).map((font) => ({
+                    value: font,
+                    label: font,
+                  }))}
+                />
               )}
               <NavigableSelect
                 label="  Color Preset"
