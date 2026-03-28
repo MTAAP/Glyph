@@ -1,11 +1,11 @@
 import { useRef, useEffect, useMemo, type RefObject } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { usePreviewScale, type ScaleMode } from '@/features/preview/hooks/usePreviewScale';
+import { VARIABLE_TYPE_FONTS, VARIABLE_TYPE_COLOR_PRESETS } from '@/shared/types';
 import type { CharacterGrid } from '@/shared/types';
 
 const FONT_SIZE = 10;
 const FONT_FAMILY = "'IBM Plex Mono', 'Courier New', monospace";
-const PROPORTIONAL_FONT_FAMILY = "Georgia, 'Times New Roman', serif";
 
 function measureCharDimensions(): { charWidth: number; charHeight: number } {
   const canvas = document.createElement('canvas');
@@ -32,11 +32,17 @@ export function CanvasPreview({
   const colorMode = useAppStore((s) => s.settings.colorMode);
   const monoFgColor = useAppStore((s) => s.settings.monoFgColor);
   const isProportional = useAppStore((s) => s.settings.variableTypeProportional && s.settings.enableVariableType);
+  const variableTypeFont = useAppStore((s) => s.settings.variableTypeFont);
+  const variableTypeColorPreset = useAppStore((s) => s.settings.variableTypeColorPreset);
+  const enableVariableType = useAppStore((s) => s.settings.enableVariableType);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
   const cellSpacingY = useAppStore((s) => s.cellSpacingY);
 
   const { charWidth, charHeight } = useMemo(() => measureCharDimensions(), []);
-  const fontFamily = isProportional ? PROPORTIONAL_FONT_FAMILY : FONT_FAMILY;
+  const fontFamily = isProportional ? VARIABLE_TYPE_FONTS[variableTypeFont] : FONT_FAMILY;
+  const effectiveMonoFgColor = enableVariableType && variableTypeColorPreset !== 'default'
+    ? VARIABLE_TYPE_COLOR_PRESETS[variableTypeColorPreset]
+    : monoFgColor;
   const cellPitchX = charWidth * cellSpacingX;
   const cellPitchY = charHeight * cellSpacingY;
   const contentWidth = grid[0]?.length ? grid[0].length * cellPitchX : 0;
@@ -88,7 +94,7 @@ export function CanvasPreview({
           if (cell.fg) {
             colorStr = `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})`;
           } else if (colorMode === 'mono') {
-            colorStr = monoFgColor;
+            colorStr = effectiveMonoFgColor;
           }
           const weight = cell.weight ?? 400;
           const italic = cell.italic ? 'i' : 'n';
@@ -146,7 +152,7 @@ export function CanvasPreview({
 
     // Reset font to default
     ctx.font = `${FONT_SIZE}px ${fontFamily}`;
-  }, [grid, cellPitchX, cellPitchY, colorMode, monoFgColor, fontFamily]);
+  }, [grid, cellPitchX, cellPitchY, colorMode, effectiveMonoFgColor, fontFamily]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;

@@ -1,12 +1,12 @@
 import { useMemo, type RefObject } from 'react';
 import { useAppStore } from '@/features/settings/store';
 import { usePreviewScale, type ScaleMode } from '@/features/preview/hooks/usePreviewScale';
+import { VARIABLE_TYPE_FONTS, VARIABLE_TYPE_COLOR_PRESETS } from '@/shared/types';
 import type { CharacterGrid } from '@/shared/types';
 
 const FONT_SIZE = 10;
 const LINE_HEIGHT = 1.1;
 const FONT_FAMILY = "'IBM Plex Mono', 'Courier New', monospace";
-const PROPORTIONAL_FONT_FAMILY = "Georgia, 'Times New Roman', serif";
 
 function measureCharWidth(): number {
   const canvas = document.createElement('canvas');
@@ -56,6 +56,9 @@ export function TextPreview({
   const monoFgColor = useAppStore((s) => s.settings.monoFgColor);
   const monoBgColor = useAppStore((s) => s.settings.monoBgColor);
   const isProportional = useAppStore((s) => s.settings.variableTypeProportional && s.settings.enableVariableType);
+  const variableTypeFont = useAppStore((s) => s.settings.variableTypeFont);
+  const variableTypeColorPreset = useAppStore((s) => s.settings.variableTypeColorPreset);
+  const enableVariableType = useAppStore((s) => s.settings.enableVariableType);
   const cellSpacingX = useAppStore((s) => s.cellSpacingX);
   const cellSpacingY = useAppStore((s) => s.cellSpacingY);
 
@@ -67,7 +70,10 @@ export function TextPreview({
 
   const { scale } = usePreviewScale(containerRef, contentWidth, contentHeight, scaleMode, customScale);
 
-  const fontFamily = isProportional ? PROPORTIONAL_FONT_FAMILY : FONT_FAMILY;
+  const fontFamily = isProportional ? VARIABLE_TYPE_FONTS[variableTypeFont] : FONT_FAMILY;
+  const effectiveMonoFgColor = enableVariableType && variableTypeColorPreset !== 'default'
+    ? VARIABLE_TYPE_COLOR_PRESETS[variableTypeColorPreset]
+    : monoFgColor;
 
   const content = useMemo(() => {
     const spacingStyle: React.CSSProperties = {
@@ -88,7 +94,7 @@ export function TextPreview({
           style={{
             fontSize: FONT_SIZE,
             ...spacingStyle,
-            color: monoFgColor,
+            color: effectiveMonoFgColor,
           }}
         >
           {grid.map((row, y) => (
@@ -107,7 +113,7 @@ export function TextPreview({
           style={{
             fontSize: FONT_SIZE,
             ...spacingStyle,
-            color: monoFgColor,
+            color: effectiveMonoFgColor,
           }}
         >
           {grid.map((row, y) => (
@@ -172,7 +178,7 @@ export function TextPreview({
         ))}
       </pre>
     );
-  }, [grid, colorMode, monoFgColor, charWidth, cellSpacingX, cellSpacingY, fontFamily, isProportional]);
+  }, [grid, colorMode, effectiveMonoFgColor, charWidth, cellSpacingX, cellSpacingY, fontFamily, isProportional]);
 
   const scaledWidth = contentWidth * scale;
   const scaledHeight = contentHeight * scale;
