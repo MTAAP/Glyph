@@ -13,7 +13,7 @@
  * hundreds of effective brightness levels from a small character set.
  */
 
-import type { CharacterCell } from '@/shared/types';
+import type { CharacterCell, MeasuredPalette } from '@/shared/types';
 
 /** Standard CSS font-weight range. */
 const WEIGHT_MIN = 100;
@@ -46,10 +46,11 @@ export function mapLuminanceToVariableType(
   charset: string,
   invertRamp: boolean,
   options: VariableTypeOptions = { italic: false, opacity: false, proportional: false },
+  measuredPalette?: MeasuredPalette,
 ): CharacterCell[][] {
   // Proportional mode uses a completely different pipeline
   if (options.proportional) {
-    return mapProportionalType(luminanceGrid, charset, invertRamp, options);
+    return mapProportionalType(luminanceGrid, charset, invertRamp, options, measuredPalette);
   }
 
   const rows = luminanceGrid.length;
@@ -227,22 +228,60 @@ function buildProportionalPalette(
 }
 
 /**
+ * How much more brightness accuracy matters relative to width accuracy
+ * in the proportional font dual-scoring selection. Higher values prioritize
+ * brightness matching; lower values prioritize width uniformity.
+ */
+const BRIGHTNESS_WEIGHT = 2.5;
+
+/**
+ * Binary search for the insertion point in a brightness-sorted palette.
+ * Returns the index of the first entry with brightness >= target.
+ */
+function binarySearchBrightness(
+  palette: PaletteEntry[],
+  target: number,
+): number {
+  let lo = 0;
+  let hi = palette.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (palette[mid].brightness < target) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
+}
+
+/**
  * Proportional font mode: selects the best (char, weight, style) for each cell
  * using dual scoring: brightness match + width match.
  *
- * score = brightnessError * 2.5 + widthError / targetWidth
+ * Uses binary search on the brightness-sorted palette to find the insertion
+ * point, then scans a +-3 window around it for the best combined score.
+ *
+ * score = brightnessError * BRIGHTNESS_WEIGHT + widthError / targetWidth
  */
 function mapProportionalType(
   luminanceGrid: number[][],
   charset: string,
   invertRamp: boolean,
   options: VariableTypeOptions,
+  measuredPalette?: MeasuredPalette,
 ): CharacterCell[][] {
   const rows = luminanceGrid.length;
-  const palette = buildProportionalPalette(charset, options.italic);
+
+  // Use runtime-measured palette if provided and non-empty, else fall back to static tables
+  const palette = (measuredPalette && measuredPalette.length > 0)
+    ? measuredPalette
+    : buildProportionalPalette(charset, options.italic);
   const targetWidth = 0.50; // Approximate average cell width in proportional font
 
   const grid: CharacterCell[][] = new Array(rows);
+  const paletteLen = palette.length;
+  const WINDOW = 3;
 
   for (let y = 0; y < rows; y++) {
     const lumRow = luminanceGrid[y];
@@ -256,14 +295,19 @@ function mapProportionalType(
       // Target brightness normalized to 0–1
       const targetBrightness = lum / 255;
 
-      // Find best matching palette entry via dual scoring
-      let bestEntry = palette[0];
+      // Binary search for closest brightness match, then scan +-3 window
+      const insertIdx = binarySearchBrightness(palette, targetBrightness);
+      const scanStart = Math.max(0, insertIdx - WINDOW);
+      const scanEnd = Math.min(paletteLen, insertIdx + WINDOW + 1);
+
+      let bestEntry = palette[Math.min(insertIdx, paletteLen - 1)];
       let bestScore = Infinity;
 
-      for (const entry of palette) {
+      for (let i = scanStart; i < scanEnd; i++) {
+        const entry = palette[i];
         const brightnessError = Math.abs(entry.brightness - targetBrightness);
         const widthError = Math.abs(entry.width - targetWidth);
-        const score = brightnessError * 2.5 + widthError / targetWidth;
+        const score = brightnessError * BRIGHTNESS_WEIGHT + widthError / targetWidth;
 
         if (score < bestScore) {
           bestScore = score;
