@@ -16,10 +16,13 @@ function escapeHtml(str: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function colorKey(cell: CharacterCell): string {
+function cellKey(cell: CharacterCell): string {
   const fg = cell.fg ? `${cell.fg[0]},${cell.fg[1]},${cell.fg[2]}` : '';
   const bg = cell.bg ? `${cell.bg[0]},${cell.bg[1]},${cell.bg[2]}` : '';
-  return `${fg}|${bg}`;
+  const w = cell.weight ?? '';
+  const i = cell.italic ? 'i' : '';
+  const o = cell.opacity !== undefined ? cell.opacity.toFixed(2) : '';
+  return `${fg}|${bg}|${w}|${i}|${o}`;
 }
 
 function spanStyle(cell: CharacterCell): string {
@@ -27,6 +30,9 @@ function spanStyle(cell: CharacterCell): string {
   if (cell.fg) parts.push(`color:rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})`);
   if (cell.bg)
     parts.push(`background-color:rgb(${cell.bg[0]},${cell.bg[1]},${cell.bg[2]})`);
+  if (cell.weight !== undefined) parts.push(`font-weight:${cell.weight}`);
+  if (cell.italic) parts.push('font-style:italic');
+  if (cell.opacity !== undefined) parts.push(`opacity:${cell.opacity.toFixed(2)}`);
   return parts.join(';');
 }
 
@@ -48,19 +54,19 @@ export function formatHtml(
 
     while (i < row.length) {
       const cell = row[i];
-      const hasColor = cell.fg !== undefined || cell.bg !== undefined;
+      const hasStyle = cell.fg !== undefined || cell.bg !== undefined || cell.weight !== undefined || cell.italic || cell.opacity !== undefined;
 
-      if (!hasColor) {
+      if (!hasStyle) {
         rowHtml += escapeHtml(cell.char);
         i++;
         continue;
       }
 
-      // Batch consecutive cells with same color key
-      const key = colorKey(cell);
+      // Batch consecutive cells with same style key
+      const key = cellKey(cell);
       let batchChars = escapeHtml(cell.char);
       let j = i + 1;
-      while (j < row.length && colorKey(row[j]) === key) {
+      while (j < row.length && cellKey(row[j]) === key) {
         batchChars += escapeHtml(row[j].char);
         j++;
       }

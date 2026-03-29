@@ -1,10 +1,11 @@
-import type { CharacterGrid, CharacterCell, RenderSettings, CycleDirection } from '@/shared/types';
+import type { CharacterGrid, CharacterCell, RenderSettings, CycleDirection, MeasuredPalette } from '@/shared/types';
 import { contrastingColor } from '@/shared/utils/color';
 import type { SampleResult } from './sampler';
 import { computeLuminanceGrid, mapLuminanceToChars } from './luminance';
 import { detectEdges } from './edge-detect';
 import { applyDithering } from './dither';
 import { renderBraille } from './braille';
+import { mapLuminanceToVariableType, type VariableTypeOptions } from './variable-type';
 
 /**
  * Main character mapping orchestrator.
@@ -26,6 +27,7 @@ export function mapToCharacters(
   imageData: Uint8ClampedArray,
   sourceWidth: number,
   sourceHeight: number,
+  measuredPalette?: MeasuredPalette,
 ): CharacterGrid {
   // Braille path -- bypasses luminance/charset pipeline entirely
   if (charset === 'braille') {
@@ -43,7 +45,7 @@ export function mapToCharacters(
     return buildWordCycleGrid(samples, settings, charset);
   }
 
-  return buildCharsetGrid(samples, settings, charset);
+  return buildCharsetGrid(samples, settings, charset, measuredPalette);
 }
 
 /**
@@ -168,9 +170,15 @@ function buildCharsetGrid(
   samples: SampleResult,
   settings: RenderSettings,
   charset: string,
+  measuredPalette?: MeasuredPalette,
 ): CharacterGrid {
   const { rows, cols } = samples;
   const luminanceGrid = computeLuminanceGrid(samples.samples);
+
+  // Variable typography path: character + font weight from luminance
+  if (settings.enableVariableType) {
+    return buildVariableTypeGrid(samples, settings, charset, luminanceGrid, measuredPalette);
+  }
 
   // Determine character grid from luminance
   let charGrid: string[][];
@@ -202,6 +210,64 @@ function buildCharsetGrid(
       const edgeChar = edgeGrid?.[y]?.[x];
       const char = edgeChar ?? charGrid[y][x];
       const cell: CharacterCell = { char };
+
+      if (settings.colorMode !== 'mono') {
+        const sample = samples.samples[y][x];
+        applyColor(cell, sample.r, sample.g, sample.b, settings.colorMode);
+      }
+
+      row[x] = cell;
+    }
+
+    grid[y] = row;
+  }
+
+  return grid;
+}
+
+function buildVariableTypeGrid(
+  samples: SampleResult,
+  settings: RenderSettings,
+  charset: string,
+  luminanceGrid: number[][],
+  measuredPalette?: MeasuredPalette,
+): CharacterGrid {
+  const { rows, cols } = samples;
+
+  // Apply dithering to luminance if enabled, then map with variable type
+  let lumGrid = luminanceGrid;
+  if (settings.enableDithering) {
+    lumGrid = applyDithering(lumGrid, charset.length, settings.ditheringStrength);
+  }
+
+  const varOptions: VariableTypeOptions = {
+    italic: settings.variableTypeItalic,
+    opacity: settings.variableTypeOpacity,
+    proportional: settings.variableTypeProportional,
+  };
+  const varGrid = mapLuminanceToVariableType(lumGrid, charset, settings.invertRamp, varOptions, measuredPalette);
+
+  // Overlay edge detection and apply color
+  let edgeGrid: (string | null)[][] | null = null;
+  if (settings.enableEdge) {
+    edgeGrid = detectEdges(luminanceGrid, settings.edgeThreshold);
+  }
+
+  const grid: CharacterGrid = new Array(rows);
+
+  for (let y = 0; y < rows; y++) {
+    const row = new Array<CharacterCell>(cols);
+
+    for (let x = 0; x < cols; x++) {
+      const edgeChar = edgeGrid?.[y]?.[x];
+      const cell = varGrid[y][x];
+
+      if (edgeChar) {
+        cell.char = edgeChar;
+        cell.weight = undefined;
+        cell.italic = undefined;
+        cell.opacity = undefined;
+      }
 
       if (settings.colorMode !== 'mono') {
         const sample = samples.samples[y][x];

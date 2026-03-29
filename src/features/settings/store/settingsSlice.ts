@@ -26,6 +26,13 @@ export const DEFAULT_SETTINGS: RenderSettings = {
   wordThreshold: 128,
   cycleDirection: 'ltr',
 
+  enableVariableType: false,
+  variableTypeItalic: false,
+  variableTypeOpacity: false,
+  variableTypeProportional: false,
+  variableTypeFont: 'Georgia',
+  variableTypeColorPreset: 'default',
+
   colorMode: 'mono',
   colorDepth: 256,
   monoFgColor: '#e0e0e0',

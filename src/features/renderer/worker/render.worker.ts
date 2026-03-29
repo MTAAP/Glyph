@@ -14,7 +14,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
     const start = performance.now();
 
     const imageData = new Uint8ClampedArray(request.imageData);
-    const { settings, width, sourceWidth, sourceHeight } = request;
+    const { settings, width, sourceWidth, sourceHeight, measuredPalette } = request;
 
     const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
 
@@ -35,6 +35,7 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
       imageData,
       sourceWidth,
       sourceHeight,
+      measuredPalette,
     );
 
     const renderTimeMs = performance.now() - start;

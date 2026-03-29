@@ -1,4 +1,4 @@
-import type { CharacterGrid, RenderSettings } from '@/shared/types';
+import type { CharacterGrid, RenderSettings, MeasuredPalette } from '@/shared/types';
 import type { CropRect } from '@/features/crop/types';
 import { sampleGrid } from '@/features/renderer/engine/sampler';
 import { mapToCharacters } from '@/features/renderer/engine/mapper';
@@ -26,6 +26,7 @@ function renderFrame(
   settings: RenderSettings,
   sourceWidth: number,
   sourceHeight: number,
+  measuredPalette?: MeasuredPalette,
 ): CharacterGrid {
   const charset = getActiveCharset(settings.charsetPreset, settings.customCharset, settings.wordSequence);
   const samples = sampleGrid(
@@ -42,6 +43,7 @@ function renderFrame(
     imageData.data,
     sourceWidth,
     sourceHeight,
+    measuredPalette,
   );
 }
 
@@ -59,6 +61,7 @@ export async function collectVideoFrames(
   duration: number,
   onProgress?: (percent: number) => void,
   cropRect?: CropRect | null,
+  measuredPalette?: MeasuredPalette,
 ): Promise<CharacterGrid[]> {
   const [rangeStart, rangeEnd] = settings.frameRange;
   const startFrame = Math.floor((rangeStart / 100) * totalFrames);
@@ -93,7 +96,7 @@ export async function collectVideoFrames(
     }
     const imageData = ctx.getImageData(0, 0, sw, sh);
 
-    const grid = renderFrame(imageData, settings, sw, sh);
+    const grid = renderFrame(imageData, settings, sw, sh, measuredPalette);
     frames.push(grid);
 
     if (onProgress) {

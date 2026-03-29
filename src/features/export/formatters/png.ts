@@ -46,6 +46,7 @@ export function formatPng(
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
+  let currentFontStr = font;
   for (let r = 0; r < rows; r++) {
     const row = grid[r];
     const y = padding + r * cellPitchY;
@@ -59,12 +60,30 @@ export function formatPng(
         ctx.fillRect(x, y, cellPitchX, cellPitchY);
       }
 
+      // Update font if weight or italic changed
+      const weight = cell.weight ?? 400;
+      const italicPrefix = cell.italic ? 'italic ' : '';
+      const fontStr = `${italicPrefix}${weight} ${fontSize}px ${fontFamily}`;
+      if (fontStr !== currentFontStr) {
+        ctx.font = fontStr;
+        currentFontStr = fontStr;
+      }
+
+      // Apply opacity
+      if (cell.opacity !== undefined) {
+        ctx.globalAlpha = cell.opacity;
+      }
+
       if (cell.fg) {
         ctx.fillStyle = `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})`;
       } else {
         ctx.fillStyle = '#e0e0e0';
       }
       ctx.fillText(cell.char, x, y);
+
+      if (cell.opacity !== undefined) {
+        ctx.globalAlpha = 1;
+      }
     }
   }
 
@@ -114,12 +133,20 @@ export function renderGridToCanvas(
         ctx.fillRect(x, y, cellPitchX, cellPitchY);
       }
 
+      if (cell.opacity !== undefined) {
+        ctx.globalAlpha = cell.opacity;
+      }
+
       if (cell.fg) {
         ctx.fillStyle = `rgb(${cell.fg[0]},${cell.fg[1]},${cell.fg[2]})`;
       } else {
         ctx.fillStyle = '#e0e0e0';
       }
       ctx.fillText(cell.char, x, y);
+
+      if (cell.opacity !== undefined) {
+        ctx.globalAlpha = 1;
+      }
     }
   }
 }
